@@ -127,11 +127,7 @@ Finally, when the last reduce task of a job is completed, change the status of t
 
 Test you can create jobs, and the map and reduce phases work, ending with the results being stored in the [results folder](./results/) and paste screenshots of the relevant logs and results.
 
-### [L5Q4] [10 marks] Balancing work (**)
-
-Right now, we send tasks to workers immediately. If there are many tasks, the workers could be overwhelmed. Instead, have each worker work on at most 3 tasks at the same time. If all workers are full, wait until they become available to send more tasks to them.
-
-### [L5Q5] [20 marks] Handling failures (***)
+### [L5Q4] [20 marks] Handling failures (**)
 
 Call the `healtcheck` endpoint of `workers` every 30 seconds.
 
@@ -144,6 +140,9 @@ Test it works with curl and paste a screenshot.
 > [!TIP]
 > Use [rocketry](https://rocketry.readthedocs.io/en/stable/cookbook/fastapi.html) to trigger the healtchcheck logic every 30 seconds.
 
+### [L5Q5] [10 marks] Balancing work (***)
+
+Right now, we send tasks to workers immediately. If there are many tasks, the workers could be overwhelmed. Instead, have each worker work on at most 3 tasks at the same time. If all workers are full, wait until they become available to send more tasks to them.
 
 ### [L5Q6] [15 marks] Persisting jobs (***)
 
