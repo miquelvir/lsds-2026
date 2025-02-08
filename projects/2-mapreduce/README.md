@@ -556,7 +556,9 @@ Response:
     "map_partitions":3,
     "reduce_partitions":10,
     "mappers":[
-        {"worker":"worker3:80","status":"in-progress","partition":0},{"worker":"worker1:80","status":"in-progress","partition":1},{"worker":"worker2:80","status":"in-progress","partition":2}
+        {"worker":"worker3:80","status":"in-progress","partition":0},
+        {"worker":"worker1:80","status":"in-progress","partition":1},
+        {"worker":"worker2:80","status":"in-progress","partition":2}
     ],
     "reducers":[
         {"worker":null,"status":"idle","partition":0},
