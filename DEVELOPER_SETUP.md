@@ -94,12 +94,7 @@ If you get stuck and need help, come to the office hours:
 
 - Commit and push your changes.
 
-## Download the sample dataset
-
-- Download the file `Eurovision3.json` and `Eurovision9.json` from AulaGlobal and save them inside [projects/2-sparkrdd/data](./projects/2-sparkrdd/data/).
-
 ## Making sure Python and Docker work
-
 
 > [!WARNING]
 > If you use WSL, remember to run these commands in the WSL terminal.
@@ -134,6 +129,7 @@ curl -X GET http://127.0.0.1:8000 | jq
 - Run a Python server with Docker (you can Ctrl-C at any point to stop the containers)
 
 ```zsh
+cd resources
 cd fastapi-quickstart
 docker compose up --build
 ```
@@ -172,6 +168,15 @@ curl -X GET http://127.0.0.1:8001/info | jq
   "studentId": 555,
   "universityName": "upf"
 }
+```
+
+
+## Download the Wikipedia dataset
+
+Find the latest available Wikipedia datasets from [dumps.wikimedia](https://dumps.wikimedia.org/other/enterprise_html/runs/). For example, `https://dumps.wikimedia.org/other/enterprise_html/runs/20250201/enwiki-NS0-20250201-ENTERPRISE-HTML.json.tar.gz`. Finally, use the following command to download the first 500k articles:
+
+```zsh
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250201/enwiki-NS0-20250201-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 50000 > projects/2-sparkrdd/data/wikipedia50k.json
 ```
 
 ## Everything You Should Know

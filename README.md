@@ -16,6 +16,7 @@ To get started, follow the [Developer setup](./DEVELOPER_SETUP.md).
 - Use informative commit messages. [Help](https://www.conventionalcommits.org/en/v1.0.0/#commit-message-with-description-and-breaking-change-footer)
 - Follow [PEP8](https://peps.python.org/pep-0008/)
 - Format your code with [black](https://black.readthedocs.io/en/stable/getting_started.html)
+- Don't add unnecessary comments to your code, we know how to read code!
 - To deliver the projects, submit a link to the repository in the Aula Global task and answer the form linked there.
 
 > [!TIP]
