@@ -38,12 +38,11 @@ Write pseudocode of a MapReduce program to count words.
 
 Write pseudocode of a MapReduce program to count words.
 
-### [S2Q2] [15 marks] MapReduce architecture (*)
+### [S2Q2] [10 marks] MapReduce architecture (*)
 
-Create 3 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html) showing:
+Create 2 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html) showing:
 - How a MapReduce job is processed (including the map and reduce phases)
-- How a master handles a mapper worker failure
-- How a worker handles a mapper worker failure
+- How a master handles a worker failure
 
 ## Lab 4: Worker
 
