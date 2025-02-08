@@ -1,3 +1,3 @@
-# Worker
+# Master
 
-The `worker` service performs map and reduce operations.
+The `master` service distributes map and reduce tasks amongst `workers`.
