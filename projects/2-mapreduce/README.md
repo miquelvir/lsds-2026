@@ -44,6 +44,7 @@ Create 2 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequence
 - How a MapReduce job is processed (including the map and reduce phases)
 - How a master handles a worker failure
 
+
 ## Lab 4: Worker
 
 During this lab, you will implement the `worker` service.
@@ -87,6 +88,7 @@ Add 5 workers to the docker compose file in ports 8001, 8002, ... and 8005.
 Add volumes for the [data](./data/), [apps](./apps/) and [results](./results/) folders.
 
 [Configure the hostname](https://stackoverflow.com/questions/29924843/how-do-i-set-hostname-in-docker-compose) of each worker to be `workerX` where X is the index (1, 2, ..., 5). Make sure each worker can communicate with the other ones using the hostname. For example, from `worker1` you should be able to `curl "http://worker2"` and `curl "http://worker4"` (if you get `Not Found` its okey, the problem is if it can't connect to the host). Test it with curl and paste a screenshot.
+
 
 
 ## Lab 5: Master
@@ -581,12 +583,21 @@ For example:
 POST /jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map/2/completed
 ```
 
+Body:
+```json
+{
+    "worker_id": "worker1"
+}
+```
+
 Response:
 ```json
 {
     "message": "Status updated"
 }
 ```
+
+If the task is already completed by another worker, return a 409.
 
 
 #### POST /jobs/{job_id}/reduce/{partition}/completed
@@ -602,6 +613,13 @@ For example:
 POST /jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/reduce/2/completed
 ```
 
+Body:
+```json
+{
+    "worker_id": "worker1"
+}
+```
+
 Response:
 ```json
 {
@@ -609,3 +627,4 @@ Response:
 }
 ```
 
+If the task is already completed by another worker, return a 409.
