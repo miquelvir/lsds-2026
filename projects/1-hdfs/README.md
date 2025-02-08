@@ -2,13 +2,15 @@
 
 The goal of this lab is to build a distributed file storage system that allows the user to upload and download files, which we will call SSHDFS (Super Simple HDFS).
 
+This lab is inspired by [The Hadoop Distributed File System (2010)](https://pages.cs.wisc.edu/~akella/CS838/F15/838-CloudPapers/hdfs.pdf).
+
 # Table of contents
 
 - [Exercises](#exercises)
-    - [Seminar 1: Introduction to HDFS, FastAPI and Docker](#seminar-1-introduction-to-hdfs-fastapi-and-docker)
-    - [Lab 1: Building the namenode](#lab-1-building-the-namenode)
-    - [Lab 2: Building the datanode](#lab-2-building-the-datanode)
-    - [Lab 3: Building a Python client](#lab-3-building-a-python-client)
+    - [Seminar 1: HDFS, FastAPI and Docker](#seminar-1-hdfs-fastapi-and-docker)
+    - [Lab 1: Namenode](#lab-1-namenode)
+    - [Lab 2: Datanode](#lab-2-datanode)
+    - [Lab 3: Client](#lab-3-client)
 
 - [Design](#design)
     - [client](#client)
@@ -24,9 +26,9 @@ We have divided exercises into three categories:
 
 # Exercises
 
-## Seminar 1: Introduction to HDFS, FastAPI and Docker
+## Seminar 1: HDFS, FastAPI and Docker
 
-During this seminar, you will review HDFS and learn how to code APIs with FastAPI and deploy them with Docker.
+During this lab, you will review HDFS and learn how to code APIs with FastAPI and deploy them with Docker.
 
 Run [fastapi-quickstart](../../resources/fastapi-quickstart/) using `docker compose up`.
 
@@ -99,13 +101,12 @@ curl -X POST "http://localhost:8000/multiply/4/5"
 ```
 
 
-### [S1Q1] [10 marks] Diagram HDFS (*)
+### [S1Q1] [20 marks] Diagram HDFS (*)
 
-Create 5 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html) each showing:
+Create 4 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html) showing:
 - Process to write a file to HDFS
 - Process to write a file to SSHDFS (without pipelines)
 - Process to read a file from HDFS
-- Process to delete a file from HDFS
 - Process to fix underreplicated blocks in HDFS
 
 ## Lab 1: Building the namenode
@@ -221,7 +222,7 @@ Right now, anyone that can open a TCP connection to your `datanode` service can 
 
 ### [L2Q5] [15 marks] Deleting files (***)
 
-Use [rocketry](https://rocketry.readthedocs.io/en/stable/cookbook/fastapi.html) to report the blocks that each `datanode` has every 30 seconds to the `namenode`:
+Use [Repeated Tasks](https://rocketry.readthedocs.io/en/stable/cookbook/fastapi.html) to report the blocks that each `datanode` has every 30 seconds to the `namenode`:
 - Add an endpoint in the API of the `namenode` to receive the block reports.
 - The `namenode` must answer the request with any blocks which should be removed
 - The `datanode` should then remove all blocks that have been indicated for removal by the `namenode`.
@@ -304,9 +305,6 @@ Use the [click](https://click.palletsprojects.com/en/8.1.x/) library to create a
 
 > [!NOTE]
 > This section outlines the requirements and design decisions of the SSHDFS architecture. You must implement a system that matches this design using Python.
-
-> [!TIP]
-> SSHDFS is a simplified version of HDFS. Read and study [The Hadoop Distributed File System paper](https://ieeexplore.ieee.org/document/5496972) first to make sure you have a good understanding of the system.
 
 SSHDFS is composed of 2 services and 1 client:
 - The [**client**](#client) allows the user to upload and download files from SSHDFS.

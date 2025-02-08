@@ -6,7 +6,7 @@ To get started, follow the [Developer setup](./DEVELOPER_SETUP.md).
 
 - [HDFS project](./projects/1-hdfs/README.md)
 
-- [Spark RDD project](./projects/2-sparkrdd/README.md)
+- [MapReduce project](./projects/2-mapreduce/README.md)
 
 - [Kafka project](./projects/3-kafka/README.md)
 
@@ -50,6 +50,7 @@ Group number: `todo`
 
 # Additional resources
 
-- [How to run HDFS locally with Docker](./resources/hadoop-quickstart/README.md)
 - [How to run FastAPI locally with Docker](./resources/fastapi-quickstart/README.md)
+- [How to run HDFS locally with Docker](./resources/hdfs-quickstart/README.md)
 - [How to run Kafka locally with Docker and use the Kafka client](./resources/kafka-quickstart/README.md)
+- [How to run Spark locally with Docker](./resources/sparkrdd-quickstart/README.md)
