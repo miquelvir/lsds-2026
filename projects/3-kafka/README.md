@@ -12,9 +12,9 @@ We will call this system Super Simple Realtime Monitoring System (SSRMS). You ca
 # Table of contents
 
 - [Required exercises](#required-exercises)
-    - [Seminar 5: Producing metrics to Kafka](#seminar-5-producing-metrics-to-kafka)
-    - [Lab 5: Building the rules service](#lab-5-building-the-rules-service)
-    - [Lab 6: Building the alarms service](#lab-6-building-the-alarms-service)
+    - [Seminar 3: Producing metrics to Kafka](#seminar-3-producing-metrics-to-kafka)
+    - [Lab 7: Rules](#lab-7-rules)
+    - [Lab 8: Alarms](#lab-8-alarms)
 
 - [Design](#design)
     - [rules service](#rules-service)
@@ -26,11 +26,11 @@ We will call this system Super Simple Realtime Monitoring System (SSRMS). You ca
 
 Remember you must format your code with black and follow PEP8 conventions.
 
-## Seminar 5: Producing metrics to Kafka
+## Seminar 3: Producing metrics to Kafka
 
 During this seminar session, you must create scripts that simulate the devices publishing metrics to Kafka.
 
-### [S5Q0] [7 marks] Answer the following questions about Kafka.
+### [S3Q0] [7 marks] Answer the following questions about Kafka.
 
 > [!TIP]
 > Answer each question briefly (at most, 3 sentences per question).
@@ -51,7 +51,7 @@ During this seminar session, you must create scripts that simulate the devices p
 
 ---
 
-### [S5Q1] [8 marks] Answer the following questions about Kafka compacted topics and materialized views.
+### [S3Q1] [8 marks] Answer the following questions about Kafka compacted topics and materialized views.
 
 > [!TIP]
 > Answer each question briefly (at most, 3 sentences per question).
@@ -70,7 +70,7 @@ During this seminar session, you must create scripts that simulate the devices p
 
 ---
 
-### [S5Q2] [5 marks] Create Kafka topics
+### [S3Q2] [5 marks] Create Kafka topics
 
 The [compose.kafka.yaml](./compose.kafka.yaml) file has a full Kafka deployment with 1 broker. 
 
@@ -93,7 +93,7 @@ Paste a screenshot.
 
 ---
 
-### [S5Q3] [5 marks] Implement the constant source emulator
+### [S3Q3] [5 marks] Implement the constant source emulator
 
 Inside the [projects\3-kafka\sources](./sources/) folder, create a Python script `constant.py`.
 
@@ -130,7 +130,7 @@ docker exec -it kafka-cluster-kafka-1-1 /bin/sh
 /bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic metrics --property print.key=true
 ```
 
-### [S5Q4] [5 marks] Implement the spikes source emulator
+### [S3Q4] [5 marks] Implement the spikes source emulator
 
 Inside the [projects\3-kafka\sources](./sources/) folder, create a Python script `spikes.py`.
 
@@ -170,7 +170,7 @@ docker exec -it kafka-cluster-kafka-1-1 /bin/sh
 ```
 
 
-### [S5Q5] [5 marks] Implement the stairs source emulator
+### [S3Q5] [5 marks] Implement the stairs source emulator
 
 Inside the [projects\3-kafka\sources](./sources/) folder, create a Python script `stairs.py`.
 
@@ -218,7 +218,7 @@ docker exec -it kafka-cluster-kafka-1-1 /bin/sh
 ```
 
 
-## Lab 5: Building the rules service
+## Lab 7: Rules
 
 During this lab session, you must build the `rules` service as described in [rules service](#rules-service).
 
@@ -231,7 +231,7 @@ Inside the [projects\3-kafka\rules](./rules/) folder, create a [Fastapi service 
     Dockerfile
 ```
 
-### [L5Q0] [20 marks] POST /rules
+### [L7Q0] [20 marks] POST /rules
 
 Implement the first endpoint of the `rules` API: [POST /rules](#post-rules).
 
@@ -257,7 +257,7 @@ docker exec -it kafka-cluster-kafka-1-1 /bin/sh
 
 ---
 
-### [L5Q1] [20 marks] DELETE /rules/{id}
+### [L7Q1] [20 marks] DELETE /rules/{id}
 
 Implement the other endpoint of the `rules` API: [DELETE /rules/{id}](#delete-rulesid).
 
@@ -273,7 +273,7 @@ docker exec -it kafka-cluster-kafka-1-1 /bin/sh
 /bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic rules --property print.key=true
 ```
 
-### [L5Q2] [5 marks] Dockerizing the rules service
+### [L7Q2] [5 marks] Dockerizing the rules service
 
 Add 1 instance of the `rules` service to the [compose.yaml](./compose.yaml) file.
 
@@ -303,7 +303,7 @@ docker exec -it lsds-kafka-lab-kafka-1-1 /bin/sh
 
 ---
 
-## Lab 6: Building the alarms service
+## Lab 8: Alarms
 
 During this lab session, you must build the `alarms` service as described in [alarms service](#alarms-service).
 
@@ -318,7 +318,7 @@ Inside the [projects\3-kafka\alarms](./alarms/) folder, create an empty `main.py
 
 ---
 
-### [L6Q0] [15 marks] Create the materialized view of rules
+### [L8Q0] [15 marks] Create the materialized view of rules
 
 Use a [Kafka consumer](https://docs.confluent.io/kafka-clients/python/current/overview.html#ak-consumer) to consume the `rules` topic from the beginning and create a materialized view in memory with a dictionary.
 
@@ -326,25 +326,25 @@ When it works, [launch it in a background thread](https://stackoverflow.com/ques
 
 ---
 
-### [L6Q1] [15 marks] Consume metrics and match rules
+### [L8Q1] [15 marks] Consume metrics and match rules
 
 Use a [Kafka consumer](https://docs.confluent.io/kafka-clients/python/current/overview.html#ak-consumer) to consume the `metrics` topic. For each received value, check if any of the rules in the materialized view trigger alarms.
 
 ---
 
-### [L6Q2] [15 marks] Sending alarms to Discord
+### [L8Q2] [15 marks] Sending alarms to Discord
 
 When a rule is triggered, use the `discord_webhook_url` to [send an alarm message to Discord](#sending-messages-to-discord).
 
 ---
 
-### [L6Q3] [5 marks]. Deploying the alarms service with docker compose
+### [L8Q3] [5 marks]. Deploying the alarms service with docker compose
 
 Add 3 replicas of the `alarms` service to the [compose.yaml](./compose.yaml) file.
 
 ---
 
-### [L6Q4] [5 marks]. Testing the system
+### [L8Q4] [5 marks]. Testing the system
 
 Deploy the full system with Docker: `docker compose up --build`
 
