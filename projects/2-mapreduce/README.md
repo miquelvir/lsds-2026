@@ -52,7 +52,7 @@ Create a FastAPI service with a Dockerfile in [the worker folder](./worker/).
 
 ### [L4Q0] [5 marks] GET /healtcheck (*)
 
-The goal is to implement the [GET /healthcheck](#get-healtcheck) endpoint.
+The goal is to implement the [GET /healthcheck](#get-healthcheck) endpoint.
 
 Test it with curl and paste a screenshot.
 
