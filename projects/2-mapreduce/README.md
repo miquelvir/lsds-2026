@@ -32,11 +32,11 @@ The goal of this seminar is to understand how MapReduce works. [word_count.py](.
 
 ### [S2Q0] [5 marks] Reverse index with MapReduce (*)
 
-Write pseudocode of a MapReduce program to count words.
+Write a MapReduce program to count words in [apps/reverse_index.py](./apps).
 
 ### [S2Q1] [5 marks] Counting bigrams with MapReduce (*)
 
-Write pseudocode of a MapReduce program to count words.
+Write a MapReduce program to count worbigramsds in [apps/bigrams.py](./apps).
 
 ### [S2Q2] [10 marks] MapReduce architecture (*)
 
@@ -160,14 +160,6 @@ The command should use the master API to:
 - create a job
 - refresh the job status every 500ms until the job completes
 - if the job status changes, print it to stdout using this format: `in-progress - mapping (7/10 done)`, `in-progress - reducing (9/12 done)` or `completed`.
-
-### [L6Q1] [5 marks] Implement a reverse index MapReduce app (***)
-
-Create a MapReduce app that performs a reverse index. Run it with SSMapReduce and paste a screenshot.
-
-### [L6Q2] [5 marks] Implement a bigram counter MapReduce app (***)
-
-Create a MapReduce app that counts how many times each bigram appears. Run it with SSMapReduce and paste a screenshot.
 
 # Design
 
