@@ -4,8 +4,8 @@ The goal of this lab is to build a distributed file storage system that allows t
 
 # Table of contents
 
-- [Required exercises](#required-exercises)
-    - [Seminar 1: Introduction to HDFS and APIs](#seminar-1-introduction-to-hdfs-services-and-apis)
+- [Exercises](#exercises)
+    - [Seminar 1: Introduction to HDFS, FastAPI and Docker](#seminar-1-introduction-to-hdfs-fastapi-and-docker)
     - [Lab 1: Building the namenode](#lab-1-building-the-namenode)
     - [Lab 2: Building the datanode](#lab-2-building-the-datanode)
     - [Lab 3: Building a Python client](#lab-3-building-a-python-client)
@@ -15,20 +15,7 @@ The goal of this lab is to build a distributed file storage system that allows t
     - [namenode](#namenode)
     - [datanode](#datanode)
 
-- [Additional exercises](#additional-exercises)
-
-# Guidelines
-
-- Use git commits and pushes (copying and pasting code through the GitHub web UI is not allowed). [Help](https://www.youtube.com/watch?v=i_23KUAEtUM)
-- Use informative commit messages. [Help](https://www.conventionalcommits.org/en/v1.0.0/#commit-message-with-description-and-breaking-change-footer)
-- Follow [PEP8](https://peps.python.org/pep-0008/)
-- Format your code with [black](https://black.readthedocs.io/en/stable/getting_started.html)
-- To deliver this project, submit a link to the repository in the Aula Global task and answer the form linked there.
-
-> [!TIP]
-> In code projects, adhering to coding standards and using formatters like black allows all contributors to produce more cohesive code.
-
-# Exercise categories
+# Grade
 
 We have divided exercises into three categories:
 - (*) Mandatory: 80% of the project grade, the bare minimum to get it to work
@@ -60,8 +47,7 @@ curl "http://localhost:8001/items/234?q=aloha"
 ```
 
 
-### [S1Q0] [5 marks] Building your first API
-
+### [S1Q0] [5 marks] Building your first API (*)
 
 Extend the service with two new endpoints: `POST /sum` and `POST /multiply/{a}/{b}`.
 
@@ -113,7 +99,7 @@ curl -X POST "http://localhost:8000/multiply/4/5"
 ```
 
 
-### [S1Q1] [10 marks] Diagram HDFS
+### [S1Q1] [10 marks] Diagram HDFS (*)
 
 Create 5 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html) each showing:
 - Process to write a file to HDFS
@@ -174,11 +160,11 @@ When the `namenode` starts, read the `checkpoint.json` file and replay the journ
 
 Whenever a new file is created or a block is appended, apend the change to the journal file.
 
-### [L1Q5] [10 marks] Deleting files (***)
+### [L1Q5] [5 marks] Deleting files (***)
 
 Implement the [DELETE /files/{filename}](#delete-filesfilename) endpoint. 
 
-### [L1Q6] [20 marks] Authentication (***)
+### [L1Q6] [15 marks] Authentication (***)
 
 Right now, anyone that can open a TCP connection to your `namenode` service can create files, delete files, ... To prevent this:
 - Add a `/login` endpoint to your service that returns a signed [JWT](https://pyjwt.readthedocs.io/en/stable/) if the caller provides a username and password that is configured in `settings.json`. 
@@ -192,7 +178,7 @@ During this lab session, you must build the `datanode` service as described in [
 
 Start by creating a basic FastAPI service in [projects\1-hdfs\datanode](./datanode/) with is Dockerfile and add it to the `compose.yaml` file at port 8001.
 
-Implement the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_numbercontent) endpoint. When a new block is PUT, you must [read the file name and block number from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/). Then, the `datanode` must [store it in its file system](#datanode-filesystem) at the path `datanode/storage/<filename>/<block_number>`.
+Implement the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_number) endpoint. When a new block is PUT, you must [read the file name and block number from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/). Then, the `datanode` must [store it in its file system](#datanode-filesystem) at the path `datanode/storage/<filename>/<block_number>`.
 
 > [!TIP]
 > You can [use the `UploadFile` object to receive files](https://fastapi.tiangolo.com/tutorial/request-files/#define-file-parameters).
@@ -233,7 +219,7 @@ For example, when a `datanode` running at port 8001 receives `PUT http://localho
 Right now, anyone that can open a TCP connection to your `datanode` service can upload and download files, ... Finish the exercise by:
 - Only accept requests that contain a valid JWT from the `namenode` as a bearer token in the `Authorization` header.
 
-### [L2Q5] [20 marks] Deleting files (***)
+### [L2Q5] [15 marks] Deleting files (***)
 
 Use [rocketry](https://rocketry.readthedocs.io/en/stable/cookbook/fastapi.html) to report the blocks that each `datanode` has every 30 seconds to the `namenode`:
 - Add an endpoint in the API of the `namenode` to receive the block reports.
@@ -295,7 +281,7 @@ Run the `upload.py` script and paste a screenshot of the result and how the bloc
 
 Create a new Python script `projects\1-hdfs\client\download.py <hdfs_file_name> <destination_path>` that downloads all the blocks from the `datanodes` and writes them all together to the destination path as the complete file:
 - First, retrieve the file metadata using the [GET /files/{filename}](#get-filesfilename) endpoint of the `namenode` API. 
-- Then, use the [GET /files/{filename}/blocks/{block}/content](#get-filesfilenameblocksblock_numbercontent) endpoint of the `datanode` API to download each block from one of the replicas.
+- Then, use the [GET /files/{filename}/blocks/{block}](#get-filesfilenameblocksblock_numbercontent) endpoint of the `datanode` API to download each block from one of the replicas.
 - Finally, [write all blocks as one final file](https://www.geeksforgeeks.org/python-write-bytes-to-file/).
 - Make sure you gracefully handle replica failures.
 
@@ -313,9 +299,6 @@ Run the `upload.py` and `download.py` scripts. Paste a screenshot of how you can
 
 Use the [click](https://click.palletsprojects.com/en/8.1.x/) library to create a unified client with different commands for: `upload`, `download` and `datanodes`.
 
-### [L3Q4] [5 marks] Write one automated test (***)
-
-Use [pytest](https://docs.pytest.org/en/8.2.x/) to create one automated test that checks we can upload and download files from SSHDFS. Compare the checksums of the file to verify the downloaded file is intact.
 
 # Design
 
@@ -668,7 +651,7 @@ When a block is stored in a `datanode` server, the block is persisted to the fil
 
 PUTting a block to `/files/{filename}/blocks/{block_number}` uploads it to the `datanode`. 
 
-For example, to upload the block `0` of a file named `myfile.jpg` in the `datanode` with address `localhost:8081`, the `client` must send a request with the block [attached as a file](https://api4.ai/blog/how-to-post-a-file-via-http-request) to `PUT http://localhost:8081/files/myfile.jpg/blocks/0/content`.
+For example, to upload the block `0` of a file named `myfile.jpg` in the `datanode` with address `localhost:8081`, the `client` must send a request with the block [attached as a file](https://api4.ai/blog/how-to-post-a-file-via-http-request) to `PUT http://localhost:8081/files/myfile.jpg/blocks/0`.
 
 You can implement write pipelines (**) by allowing an additional query parameter: `/files/{filename}/blocks/{block_number}?pipeline=localhost:8002,localhost:8003` which specifies which `datanodes` should this block be forwarded to.
 
@@ -676,6 +659,6 @@ You can implement write pipelines (**) by allowing an additional query parameter
 
 GETting a block from `/files/{filename}/blocks/{block_number}` downloads it from the `datanode`. 
 
-For example, to download the block `0` of a file named `myfile.jpg` from the `datanode` with address `localhost:8081`, the `client` must send a request to `GET http://localhost:8081/files/myfile.jpg/blocks/0/content`.
+For example, to download the block `0` of a file named `myfile.jpg` from the `datanode` with address `localhost:8081`, the `client` must send a request to `GET http://localhost:8081/files/myfile.jpg/blocks/0`.
 
 If the block does not exist in the `datanode`, the response must be a 404.

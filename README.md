@@ -10,6 +10,16 @@ To get started, follow the [Developer setup](./DEVELOPER_SETUP.md).
 
 - [Kafka project](./projects/3-kafka/README.md)
 
+# Guidelines
+
+- Use git commits and pushes (copying and pasting code through the GitHub web UI is not allowed). [Help](https://www.youtube.com/watch?v=i_23KUAEtUM)
+- Use informative commit messages. [Help](https://www.conventionalcommits.org/en/v1.0.0/#commit-message-with-description-and-breaking-change-footer)
+- Follow [PEP8](https://peps.python.org/pep-0008/)
+- Format your code with [black](https://black.readthedocs.io/en/stable/getting_started.html)
+- To deliver the projects, submit a link to the repository in the Aula Global task and answer the form linked there.
+
+> [!TIP]
+> In code projects, adhering to coding standards and using formatters like black allows all contributors to produce more cohesive code.
 
 # Plagiarism Warning
 
