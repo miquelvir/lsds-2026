@@ -144,7 +144,7 @@ Test it works with curl and paste a screenshot.
 
 ### [L5Q5] [10 marks] Balancing work (***)
 
-Right now, we send tasks to workers immediately. If there are many tasks, the workers could be overwhelmed. Instead, have each worker work on at most 3 tasks at the same time. If all workers are full, wait until they become available to send more tasks to them.
+Right now, we send tasks to workers immediately. If there are many tasks, the workers could be overwhelmed. Instead, have each worker work on at most 1 task at the same time. If all workers are full, wait until they become available to send more tasks to them.
 
 ### [L5Q6] [15 marks] Persisting jobs (***)
 
