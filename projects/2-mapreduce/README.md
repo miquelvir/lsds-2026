@@ -387,7 +387,7 @@ The reduce endpoint receives a body with the details of the reduce task and star
 The body fields are:
 - `app_name`: the name of a MapReduce app from the [apps](./apps/) folder, without the `.py` extension.
 - `reduce_partition`: an integer representing which partition of the map task's output must be processed by this worker
-- `map_workers`: a list of URLs of workers which have the results of map tasks for this job
+- `intermediate_partitions`: a list of URLs of workers which have the results of map tasks for this job
 
 For example:
 
@@ -400,7 +400,7 @@ Body:
 {
     "app_name": "word_count",
     "reduce_partition": 1,
-    "map_workers": ["http://worker1:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output/0/1", "http://worker2:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output/1/1", "http://worker2:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output/2/1"]
+    "intermediate_partitions": ["http://worker1:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output?mapPartition=0&reducePartition=1", "http://worker2:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output?mapPartition=1&reducePartition=1", "http://worker2:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output?mapPartition=2&reducePartition=1"]
 }
 ```
 
