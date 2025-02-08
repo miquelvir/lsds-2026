@@ -109,7 +109,7 @@ Create 4 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequence
 - Process to read a file from HDFS
 - Process to fix underreplicated blocks in HDFS
 
-## Lab 1: namenode
+## Lab 1: Namenode
 
 During this lab session, you must build the `namenode` service as described in [namenode](#namenode). The `namenode` service should have an API that allows creating files, adding blocks to files and reading the file metadata.
 
@@ -171,7 +171,7 @@ Right now, anyone that can open a TCP connection to your `namenode` service can 
 - Add a `/login` endpoint to your service that returns a signed [JWT](https://pyjwt.readthedocs.io/en/stable/) if the caller provides a username and password that is configured in `settings.json`. 
 - In all the other API endpoints, only accept requests that contain a valid JWT as a bearer token in the `Authorization` header.
 
-## Lab 2: datanode
+## Lab 2: Datanode
 
 During this lab session, you must build the `datanode` service as described in [datanode](#datanode). The `datanode` service should have an API that allows storing and reading blocks.
 
@@ -236,7 +236,7 @@ Use [rocketry](https://rocketry.readthedocs.io/en/stable/cookbook/fastapi.html) 
 - The `namenode` must answer the block reports with any blocks in the replication queue which should be copied to other datanodes
 - The `datanode` should then send these blocks to the indicated `datanode`.
 
-## Lab 3: client
+## Lab 3: Client
 
 During this seminar, you must build the [Python client](#client) which allows uploading and download files as blocks from SSHDFS. When uploading a file, the client is in charge of dividing the file into blocks and uploading each of them. When downloading a file, the client is in charge of appending all the downloaded blocks together in the final file.
 
