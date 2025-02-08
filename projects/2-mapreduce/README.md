@@ -66,9 +66,9 @@ Implement the [POST /jobs/{job_id}/map](#post-jobsjob_idmap) endpoint. This endp
 
 Test it with curl and paste a screenshot.
 
-### [L4Q2] [10 marks] GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reduucePartition={reduce_partition} (*)
+### [L4Q2] [10 marks] GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reducePartition={reduce_partition} (*)
 
-Implement the [GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reduucePartition={reduce_partition}](#get-jobsjob_idmap-outputmappartitionmap_partitionreduucepartitionreduce_partition) endpoint. This endpoint can be called by a worker doing a reduce to get the map results this worker computed.
+Implement the [GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reducePartition={reduce_partition}](#get-jobsjob_idmap-outputmappartitionmap_partitionreducepartitionreduce_partition) endpoint. This endpoint can be called by a worker doing a reduce to get the map results this worker computed.
 
 Test it with curl and paste a screenshot.
 
@@ -352,7 +352,7 @@ graphite 1
 global 1
 ```
 
-#### GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reduucePartition={reduce_partition}
+#### GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reducePartition={reduce_partition}
 
 The `map-output` endpoint allows other workers that need this worker's map output as input for their reduce to read it.
 
