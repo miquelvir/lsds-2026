@@ -52,13 +52,13 @@ Create a FastAPI service with a Dockerfile in [the worker folder](./worker/).
 
 ### [L4Q0] [5 marks] GET /healtcheck (*)
 
-The goal is to implement the [GET /healthcheck](#get-healthcheck) endpoint.
+Implement the [GET /healthcheck](#get-healthcheck) endpoint.
 
 Test it with curl and paste a screenshot.
 
 ### [L4Q1] [20 marks] POST /jobs/{job_id}/map (*)
 
-The goal is to implement the [POST /jobs/{job_id}/map](#post-jobsjob_idmap) endpoint. This endpoint will be called by the master to start map tasks.
+Implement the [POST /jobs/{job_id}/map](#post-jobsjob_idmap) endpoint. This endpoint will be called by the master to start map tasks.
 
 > [!TIP]
 > Use [background tasks](https://fastapi.tiangolo.com/tutorial/background-tasks/) to trigger the map logic in the background after responding to the master.
@@ -68,14 +68,14 @@ Test it with curl and paste a screenshot.
 
 ### [L4Q2] [10 marks] GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reduucePartition={reduce_partition} (*)
 
-The goal is to implement the [GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reduucePartition={reduce_partition}](#get-jobsjob_idmap-outputmappartitionmap_partitionreduucepartitionreduce_partition) endpoint. This endpoint can be called by a worker doing a reduce to get the map results this worker computed.
+Implement the [GET /jobs/{job_id}/map-output?mapPartition={map_partition}&reduucePartition={reduce_partition}](#get-jobsjob_idmap-outputmappartitionmap_partitionreduucepartitionreduce_partition) endpoint. This endpoint can be called by a worker doing a reduce to get the map results this worker computed.
 
 Test it with curl and paste a screenshot.
 
 
 ### [L4Q3] [20 marks] POST /jobs/{job_id}/reduce (*)
 
-The goal is to implement the [POST /jobs/{job_id}/reduce](#post-jobsjob_idreduce) endpoint. This endpoint will be called by the master to start reduce tasks.
+Implement the [POST /jobs/{job_id}/reduce](#post-jobsjob_idreduce) endpoint. This endpoint will be called by the master to start reduce tasks.
 
 Test it with curl and paste a screenshot.
 
@@ -97,13 +97,13 @@ Create a FastAPI service with a Dockerfile in [the master folder](./master/).
 
 ### [L5Q0] [15 marks] POST /jobs (*)
 
-The goal is to implement the [POST /jobs](#post-jobs) endpoint. This endpoint will be called by the client to create new MapReduce jobs.
+Implement the [POST /jobs](#post-jobs) endpoint. This endpoint will be called by the client to create new MapReduce jobs.
 
 Test it with curl and paste a screenshot.
 
 ### [L5Q1] [5 marks] GET /jobs/{job_id} (*)
 
-The goal is to implement the [GET /jobs/{job_id](#get-jobs-job-id) endpoint. This endpoint will be called by the client to get the status of jobs.
+Implement the [GET /jobs/{job_id](#get-jobs-job-id) endpoint. This endpoint will be called by the client to get the status of jobs.
 
 Test it with curl and paste a screenshot.
 
