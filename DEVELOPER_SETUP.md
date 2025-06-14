@@ -28,7 +28,6 @@ If you get stuck and need help, come to the office hours:
 
 ### Configure VSCode
 
-- If you use Windows, [install the WSL extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl) and open VSCode in WSL to follow the next steps
 - [Install the Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 - [Install the Markdown Preview Mermaid Support extension](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
 - [Install the Markdown Alert extension](https://marketplace.visualstudio.com/items?itemName=yahyabatulu.vscode-markdown-alert)
@@ -65,19 +64,15 @@ If you get stuck and need help, come to the office hours:
 
 - Mute the channels from the other subjects so you only receive notifications for LSDS. [Help](https://support.discord.com/hc/en-us/articles/209791877-How-do-I-mute-and-disable-notifications-for-specific-channels)
 
-### AWS
-
-- Accept the invitation to AWS academy you received in the email.
-
 ## Creating your group's repository
 
 > [!NOTE]
 > All (3) members of your group must be from the same seminar.
 > Only one member of the group must create the repository and share it with the others.
 
-- Fill in [this spreadsheet](https://docs.google.com/spreadsheets/d/1dZ6m6r7b2M4QpjbJlqoQ2XpHhlhRuUGJauw2goXzXto/edit?usp=sharing) with your group members.
+- Fill in [this spreadsheet](https://docs.google.com/spreadsheets/d/1PrI6Jb5mVEeFuKNJeFE9dosFC7cP6vhoScFY2L2uZxk/edit?usp=sharing) with your group members.
 
-- Click the [Use this template -> Create a new repository](https://github.com/miquelvir/lsds-2025) button and create a **private** repository with the following name: `lsds-2025-{group_number}-t{theory_number}-p{lab_number}-s{seminar_number}`. For example, `lsds-2025-01-t1-p102-s103`.
+- Click the [Use this template -> Create a new repository](https://github.com/miquelvir/lsds-2026) button and create a **private** repository with the following name: `lsds-2026-{group_number}-t{theory_number}-p{lab_number}-s{seminar_number}`. For example, `lsds-2026-01-t1-p102-s103`.
 
 - Share the repository with [all teachers](./TEACHER_LIST.md). [Help](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository#inviting-a-collaborator-to-a-personal-repository)
 
@@ -88,41 +83,12 @@ If you get stuck and need help, come to the office hours:
 > 
 > Everything inside `\\wsl.localhost` is the file system of your Linux subsystem.
 
-- Clone the repository using Github Desktop. [Help](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-a-repository-from-github-to-github-desktop)
-
-- Fill in the [README](./README.md) with the information about your group.
-
-- Commit and push your changes.
+- Clone the repository using Github Desktop or VSCode. [Help](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-a-repository-from-github-to-github-desktop)
 
 ## Making sure Python and Docker work
 
 > [!WARNING]
 > If you use WSL, remember to run these commands in the WSL terminal.
-
-- Run a Python server (you can run `deactivate` at any point to exit the venv)
-
-```zsh
-cd resources
-cd fastapi-quickstart
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-fastapi dev app/main.py
-```
-
-- In another terminal, check you can access the server
-
-```zsh
-curl -X GET http://127.0.0.1:8000 | jq
-```
-
-```zsh
-{
-  "Hello": "World"
-}
-```
-
-- Stop the server
 
 - Open Docker Desktop
 
@@ -137,7 +103,7 @@ docker compose up --build
 - In another terminal, check you can access the server when it runs in Docker
 
 ```zsh
-curl -X GET http://127.0.0.1:8001/info | jq
+curl -X GET http://127.0.0.1:8000/info | jq
 ```
 
 ```zsh
@@ -151,8 +117,6 @@ curl -X GET http://127.0.0.1:8001/info | jq
 
 - Redeploy the service
 ```zsh
-cd resources
-cd fastapi-quickstart
 docker compose down
 docker compose up --build
 ```
@@ -160,7 +124,7 @@ docker compose up --build
 - Check it works:
 
 ```zsh
-curl -X GET http://127.0.0.1:8001/info | jq
+curl -X GET http://127.0.0.1:8000/info | jq
 ```
 
 ```zsh
@@ -170,15 +134,6 @@ curl -X GET http://127.0.0.1:8001/info | jq
 }
 ```
 
-
-## Download the Wikipedia dataset
-
-Find the latest available Wikipedia datasets from [dumps.wikimedia](https://dumps.wikimedia.org/other/enterprise_html/runs/). For example, `https://dumps.wikimedia.org/other/enterprise_html/runs/20250201/enwiki-NS0-20250201-ENTERPRISE-HTML.json.tar.gz`. Finally, use the following command to download the first 500k articles:
-
-```zsh
-curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250201/enwiki-NS0-20250201-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 50000 > projects/2-sparkrdd/data/wikipedia50k.json
-```
-
 ## Everything You Should Know
 
-Read and study: [Everything You Should Know](https://docs.google.com/presentation/d/1hVYOn-Cs5LHM8l-t4164iZ7BqfINJoJT/edit?usp=sharing&ouid=102931553666282890148&rtpof=true&sd=true). If you have any questions, come to the Office Hours.
+Read and study: [Everything You Should Know](https://docs.google.com/presentation/d/1VoIOCj369CDN5sCiMnNHpx3xVMBaJAkO/edit?usp=sharing&ouid=102931553666282890148&rtpof=true&sd=true). If you have any questions, come to the Office Hours.
