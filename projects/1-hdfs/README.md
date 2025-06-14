@@ -472,7 +472,7 @@ When you receive a block report from a `datanode`, extend the `namenode` impleme
 
 You will build a [Python client](#client) which allows uploading and download files as blocks from SSHDFS. When uploading a file, the client is in charge of dividing the file into blocks and uploading each of them. When downloading a file, the client is in charge of appending all the downloaded blocks together in the final file.
 
-### [1.4.1] List datanodes (^)
+### [1.4.1] List datanodes (^^)
 
 Create a folder `client` with a Python script: `list_datanodes.py` and a `requirements.txt` file with any librarie it needs to run. 
 
@@ -490,7 +490,7 @@ For example:
 > [!TIP]
 > You can use [httpx](https://www.python-httpx.org/quickstart/) to make HTTP requests with Python. See `JSON Response Content`.
 
-### [1.4.2] Upload a file (^)
+### [1.4.2] Upload a file (^^)
 
 Create a new Python script `upload.py <source_path> <sshdfs_file_name>`. It creates a new file in the `namenode`, creates the necessary blocks according to the block size, and uploads each block to the first `datanode` that the `namenode` assigned:
 
@@ -507,7 +507,7 @@ Create a new Python script `upload.py <source_path> <sshdfs_file_name>`. It crea
 
 Run the `upload.py` script and make sure it works (i.e. if you open the `Files` tab in Docker Desktop you can see all the blocks properly uploaded).
 
-### [1.4.3] Download a file (^)
+### [1.4.3] Download a file (^^)
 
 Create a new Python script `download.py <hdfs_file_name> <destination_path>` that downloads all the blocks from the `datanodes` and writes them all together to the destination path as the complete file:
 - First, retrieve the file metadata using the [GET /files/{filename}](#get-filesfilename) endpoint of the `namenode` API. 
