@@ -20,5 +20,5 @@ docker-compose up -d
 
 1. Open a shell
 ```zsh
-curl -X GET http://127.0.0.1:8001/info | jq
+curl -X GET http://127.0.0.1:8000/info | jq
 ```

@@ -1,674 +1,1631 @@
-# Building a realtime monitoring system
+# Building Kafka from scratch with Python
 
-Engineers at Acme Inc. are suffering many incidents and outages. During these outages, their services go down and customers cannot use the website and other services they offer. They want to start publishing metrics from their servers such as CPU usage, failure count, memory usage, request count, packages received in their warehouses, etc. Then, they wish to leverage some service which can help them define rules and trigger alerts. For example, send a Discord message with an alarm when the CPU usage is above 80%. They hope if they get an alert in realtime about any issues in their services, they will be able to fix them quickly before there is customer impact.
+The goal of this lab is to build a distributed data store which allows consuming and producing in realtime, which we will call SSKafka (Super Simple Kafka). This lab is inspired by [Kafka: a Distributed Messaging System for Log Processing (2011)](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/Kafka.pdf) and [KIP-595: A Raft Protocol for the Metadata Quorum (2020)](https://cwiki.apache.org/confluence/display/KAFKA/KIP-595%3A+A+Raft+Protocol+for+the+Metadata+Quorum).
 
-You need to build said realtime monitoring system which:
-- **reads all the metrics from the sources in realtime** 
-- allow engineers to **create and delete rules** using an API. For example: trigger an alarm when `cpu-usage-server-124` is above `90`.
-- **send alarms in real-time to a Discord channel**. For example: send a Discord message when the `cpu-usage-server-124 > 90` rule is triggered.
+# Grade
 
-We will call this system Super Simple Realtime Monitoring System (SSRMS). You can check out the [SSRMS demo video](https://www.youtube.com/watch?v=yuPLcAdw5SQ) to better understand how your system must work when you finish the lab.
+Requirements are divided into categories to help you prioritize.
 
-# Table of contents
+| Weight               | Description                              | Symbol   |
+|----------------------|------------------------------------------|----------|
+| 40% | Essential, needed to get something working       | (^)      |
+| 30% | Nice-to-haves, not required to get something working | (^^)     |
+| 30% | Difficult, complex exercises             | (^^^)    |
+| +3/10 (extra) | Advanced, challenges for diving deep       | (^^^^)   |
 
-- [Required exercises](#required-exercises)
-    - [Seminar 3: Producing metrics to Kafka](#seminar-3-producing-metrics-to-kafka)
-    - [Lab 7: Rules](#lab-7-rules)
-    - [Lab 8: Alarms](#lab-8-alarms)
 
-- [Design](#design)
-    - [rules service](#rules-service)
-    - [alarms service](#alarms-service)
+# Work breakdown
 
-- [Additional exercises](#additional-exercises)
+This section presents a step by step work breakdown to help you implement SSKafka. Refer to the [Design](#design) section for the full system design reference.
 
-# Required exercises
+## [3.1] Control plane: implementing the broker Admin API
 
-Remember you must format your code with black and follow PEP8 conventions.
+> [!IMPORTANT]
+> The goal of this lab is to implement a basic broker service which allows you to create and list topics through its API. When the admin API is ready, you will implement some Python client scripts which use it to make creating and listing topics easier.
 
-## Seminar 3: Producing metrics to Kafka
+### [3.1.1] Run 5 brokers in Docker Compose (^)
 
-During this seminar session, you must create scripts that simulate the devices publishing metrics to Kafka.
+Bootstrap a FastAPI service for the broker with a single [GET /healthcheck](#get-healthcheck) endpoint.
 
-### [S3Q0] [7 marks] Answer the following questions about Kafka.
+```
+/kafka
+    /broker
+        Dockerfile
+        /app
+            main.py
+            requirements.txt
+    /client
+        consume.py
+        produce.py
+        create_topic.py
+        delete_topic.py
+        list_topics.py
+    docker-compose.yaml
+```
+
+Then, create a `docker-compose.yaml` file with 5 brokers in ports 8001 (leader), 8002 (follower), 8003 (follower), 8004 (follower) and 8005 (follower).
+
 
 > [!TIP]
-> Answer each question briefly (at most, 3 sentences per question).
+> You can configure the broker_id an the leader_broker_id by passing environment variables from [Docker Compose](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/) to [Python](https://stackoverflow.com/a/4907053).
 
-**[1 mark] What is a log? What is a topic? What is a partition?**
 
-**[1 mark] What does the broker do? What is a producer? And a consumer?**
+<details>
+<summary>Sanity check</summary>
 
-**[1 mark] What is a consumer group? What is a commit?**
+**test**
 
-**[1 mark] Is ordering guaranteed in Kafka?**
-
-**[1 mark] What is the upper boundary when horizontally scaling Kafka consumers for a single topic?**
-
-**[1 mark] Does each `alarms` service process only one metrics type or many?**
-
-**[1 mark] Can two metrics of the same type end up in two different `alarms` services?**
-
----
-
-### [S3Q1] [8 marks] Answer the following questions about Kafka compacted topics and materialized views.
-
-> [!TIP]
-> Answer each question briefly (at most, 3 sentences per question).
-
-**[1 mark] What is the difference between a standard topic and a compacted topic?**
-
-**[1 mark] What is a materialized view? Why do we use compacted topics to create materialized views?**
-
-**[1 mark] If multiple horizontally scaled consumers want to each construct a materialized view of the full topic, must they be in the same or different consumer groups?**
-
-**[1 mark] If multiple horizontally scaled consumers want to each construct a materialized view of the full topic, what are the benefits of having more than 1 partition?**
-
-**[1 mark] What record represents a key deletion for a Materialzied View in a Kafka topic?**
-
-**[3 mark] What is the benefit of a materialized view over an in-memory cache?**
-
----
-
-### [S3Q2] [5 marks] Create Kafka topics
-
-The [compose.kafka.yaml](./compose.kafka.yaml) file has a full Kafka deployment with 1 broker. 
-
-Start the Kafka cluster with `docker compose -f compose.kafka.yaml up`.
-
-Use the Kafka CLI to create two topics: `metrics` (standard) and `rules` (compacted):
-
-```zsh
-docker exec -it kafka-cluster-kafka-1-1 /bin/sh
-
-/bin/kafka-topics --bootstrap-server kafka-1:9092 --create --topic metrics --partitions 20 --replication-factor 1
-/bin/kafka-topics --bootstrap-server kafka-1:9092 --create --topic rules --partitions 3 --replication-factor 1 --config cleanup.policy=compact
-
-/bin/kafka-topics --bootstrap-server kafka-1:9092 --list
-
-exit
-```
-
-Paste a screenshot.
-
----
-
-### [S3Q3] [5 marks] Implement the constant source emulator
-
-Inside the [projects\3-kafka\sources](./sources/) folder, create a Python script `constant.py`.
-
-This script should be called with 3 parameters: `metric_name`, `metric_value` and `period_seconds`. Then, it must publish to the `metrics` topic, using `metric_name` as key and `{"value":metric_value}` as value. Then, sleep `period_seconds` and repeat again.
-
-```zsh
-python3 constant.py {metric_name} {metric_value} {period_seconds}
-```
-
-![constant](./guide_images/constant.png "constant publisher")
-
-For example, this is an example command and what it should publish to Kafka (where we represent `key: value`):
-
-```zsh
-python3 constant.py packages-received 501 10
-```
-
-```
-packages-received: {"value": 501}
-packages-received: {"value": 501}
-packages-received: {"value": 501}
-packages-received: {"value": 501}
-packages-received: {"value": 501}
-...
-```
-> [!TIP]
-> Take a look at [producer.py](./../../resources/kafka-quickstart/producer.py).
-
-Paste a screenshot verifying the metrics are published to Kafka:
-
-```zsh
-docker exec -it kafka-cluster-kafka-1-1 /bin/sh
-
-/bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic metrics --property print.key=true
-```
-
-### [S3Q4] [5 marks] Implement the spikes source emulator
-
-Inside the [projects\3-kafka\sources](./sources/) folder, create a Python script `spikes.py`.
-
-This script should be called with 5 parameters: `metric_name`, `low_value`, `spike_value`, `period_seconds` and `frequency`. Then, it must publish to the `metrics` topic, using `metric_name` as key and `{"value":metric_value}` as value. The value must be `spike_value` every `frequency` records, otherwise `low_value` . Then, sleep `period_seconds` and repeat again.
-
-```zsh
-python3 spikes.py {metric_name} {low_value} {spike_value} {period_seconds} {frequency}
-```
-
-![spikes](./guide_images/spikes.png "spikes publisher")
-
-For example, this is an example command and what it should publish to Kafka (where we represent `key: value`):
-
-```zsh
-python3 spikes.py packages-received 450 550 1 3
-```
-
-```
-packages-received: {"value": 550}
-packages-received: {"value": 450}
-packages-received: {"value": 450}
-packages-received: {"value": 550}
-packages-received: {"value": 450}
-packages-received: {"value": 450}
-...
-```
-
-> [!TIP]
-> Take a look at [producer.py](./../../resources/kafka-quickstart/producer.py).
-
-Paste a screenshot verifying the metrics are published to Kafka:
-
-```zsh
-docker exec -it kafka-cluster-kafka-1-1 /bin/sh
-
-/bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic metrics --property print.key=true
-```
-
-
-### [S3Q5] [5 marks] Implement the stairs source emulator
-
-Inside the [projects\3-kafka\sources](./sources/) folder, create a Python script `stairs.py`.
-
-This script should be called with 5 parameters: `metric_name`, `start_value`, `env_value`, `step` and `period_seconds`. Then, it must publish to the `metrics` topic, using `metric_name` as key and `{"value":metric_value}` as value. The value must start at `start_value`, and increment every `period_seconds` by `step` until `end_value`. Them, go back to `start_value` and repeat again.
-
-```zsh
-python3 stairs.py {metric_name} {metric_value} {start_value} {end_value} {step} {period_seconds}
-```
-
-![stairs](./guide_images/stairs.png "stairs publisher")
-
-For example, this is an example command and what it should publish to Kafka (where we represent `key: value`):
-
-```zsh
-python3 stairs.py packages-received 480 510 5 1
-```
-
-```
-packages-received: {"value": 480}
-packages-received: {"value": 485}
-packages-received: {"value": 490}
-packages-received: {"value": 495}
-packages-received: {"value": 500}
-packages-received: {"value": 505}
-packages-received: {"value": 510}
-packages-received: {"value": 480}
-packages-received: {"value": 485}
-packages-received: {"value": 490}
-packages-received: {"value": 495}
-packages-received: {"value": 500}
-packages-received: {"value": 505}
-packages-received: {"value": 510}
-...
-```
-
-> [!TIP]
-> Take a look at [producer.py](./../../resources/kafka-quickstart/producer.py).
-
-Paste a screenshot verifying the metrics are published to Kafka:
-
-```zsh
-docker exec -it kafka-cluster-kafka-1-1 /bin/sh
-
-/bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic metrics --property print.key=true
-```
-
-
-## Lab 7: Rules
-
-During this lab session, you must build the `rules` service as described in [rules service](#rules-service).
-
-Inside the [projects\3-kafka\rules](./rules/) folder, create a [Fastapi service with Docker](https://fastapi.tiangolo.com/deployment/docker/).
-
-```
-/rules
-    requirements.txt
-    main.py
-    Dockerfile
-```
-
-### [L7Q0] [20 marks] POST /rules
-
-Implement the first endpoint of the `rules` API: [POST /rules](#post-rules).
-
-**[10 marks] Implement the [POST /rules](#post-rules) endpoint**.
-
-> [!TIP]
-> Use the [`uuid.uuid4()`](https://stackoverflow.com/questions/534839/how-to-create-a-guid-uuid-in-python) method to generate the rule id.
-
-
-**[10 marks] For every created rule, [publish it to the `rules` Kafka topic](https://docs.confluent.io/kafka-clients/python/current/overview.html#initialization)**.
-
-> [!TIP]
-> Take a look at [kafka-quickstart](./../../resources/kafka-quickstart/) for a sample.
-
-Paste a screenshot of how you use `curl` to POST a rule and it is published to the Kafka topic:
-
-```zsh
-docker exec -it kafka-cluster-kafka-1-1 /bin/sh
-
-/bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic rules --property print.key=true
-```
-
-
----
-
-### [L7Q1] [20 marks] DELETE /rules/{id}
-
-Implement the other endpoint of the `rules` API: [DELETE /rules/{id}](#delete-rulesid).
-
-**[10 marks] Implement the [DELETE /rules/{id}](#delete-rulesid) endpoint**.
-
-**[10 marks] For every deleted rule, [publish it to the `rules` Kafka topic with a null body](https://docs.confluent.io/kafka-clients/python/current/overview.html#initialization)**.
-
-Paste a screenshot of how you use `curl` to DELETE a rule and null is published to the Kafka topic:
-
-```zsh
-docker exec -it kafka-cluster-kafka-1-1 /bin/sh
-
-/bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic rules --property print.key=true
-```
-
-### [L7Q2] [5 marks] Dockerizing the rules service
-
-Add 1 instance of the `rules` service to the [compose.yaml](./compose.yaml) file.
-
-```yaml
-services:
-  rules:
-    build: rules
-    ports:
-      - "5001:80"
-    networks:
-      - kafka-cluster_kafka-cluster-network
-    environment:
-      BROKER: kafka-1:9092
-```
-
-Start the services:
 ```zsh
 docker compose up --build
 ```
 
-Verify and paste a screenshot of how when you POST and DELETE rules with `curl`, the correct records are published to Kafka.
-
 ```zsh
-docker exec -it lsds-kafka-lab-kafka-1-1 /bin/sh
-/bin/kafka-console-consumer --bootstrap-server kafka-1:9092 --topic rules --property print.key=true
+curl "http://localhost:8001/healthcheck" -s | jq
+curl "http://localhost:8002/healthcheck" -s | jq
+curl "http://localhost:8003/healthcheck" -s | jq
+curl "http://localhost:8004/healthcheck" -s | jq
+curl "http://localhost:8005/healthcheck" -s | jq
 ```
 
----
-
-## Lab 8: Alarms
-
-During this lab session, you must build the `alarms` service as described in [alarms service](#alarms-service).
-
-Inside the [projects\3-kafka\alarms](./alarms/) folder, create an empty `main.py` file with a Dockerfile and requirements.txt.
-
+**expected**
+```json
+{
+  "status": "up",
+  "broker_id": 1,
+  "leader_broker_id": 1
+}
+{
+  "status": "up",
+  "broker_id": 2,
+  "leader_broker_id": 1
+}
+{
+  "status": "up",
+  "broker_id": 3,
+  "leader_broker_id": 1
+}
+{
+  "status": "up",
+  "broker_id": 4,
+  "leader_broker_id": 1
+}
+{
+  "status": "up",
+  "broker_id": 5,
+  "leader_broker_id": 1
+}
 ```
-/alarms
-    requirements.txt
-    main.py
-    Dockerfile
-```
 
----
+</details>
 
-### [L8Q0] [15 marks] Create the materialized view of rules
+### [3.1.2] Implement admin API for creating topics (^)
 
-Use a [Kafka consumer](https://docs.confluent.io/kafka-clients/python/current/overview.html#ak-consumer) to consume the `rules` topic from the beginning and create a materialized view in memory with a dictionary.
-
-When it works, [launch it in a background thread](https://stackoverflow.com/questions/2905965/creating-threads-in-python) so it can keep getting updates while we process metrics.
-
----
-
-### [L8Q1] [15 marks] Consume metrics and match rules
-
-Use a [Kafka consumer](https://docs.confluent.io/kafka-clients/python/current/overview.html#ak-consumer) to consume the `metrics` topic. For each received value, check if any of the rules in the materialized view trigger alarms.
-
----
-
-### [L8Q2] [15 marks] Sending alarms to Discord
-
-When a rule is triggered, use the `discord_webhook_url` to [send an alarm message to Discord](#sending-messages-to-discord).
-
----
-
-### [L8Q3] [5 marks]. Deploying the alarms service with docker compose
-
-Add 3 replicas of the `alarms` service to the [compose.yaml](./compose.yaml) file.
-
----
-
-### [L8Q4] [5 marks]. Testing the system
-
-Deploy the full system with Docker: `docker compose up --build`
-
-Create different rules with the rules API and start producing metrics with the [emulated sources](./sources/). 
-
-**[3 mark] Paste screenshots of how you receive the alarms in Discord.**
-
-**[1 mark] How are `metrics` distributed between alarm containers?**
-
-**[1 mark] What happens if you suddenly stop one of alarm service instances?**
-
-
-
----
-
-# Design
-
-> [!NOTE]
-> This section outlines the requirements and design decisions of the architecture of SSRMS. You must implement a system that matches this design using Python.
+Implement the [POST /admin/v1/topics](#post-adminv1topics) endpoint. You should persist every created topic in the [__cluster_metadata.log](#metadata-log) file.
 
 > [!TIP]
-> SSRMS system uses Kafka extensively. Read and study the [Kafka: a Distributed Messaging System for Log Processing](https://www.microsoft.com/en-us/research/wp-content/uploads/2017/09/Kafka.pdf?msockid=01dc1031619a67bb08ec049760dd66cc) paper.
-
-SSRMS is composed of 2 services, metric sources and clients:
-- The [**sources**](#sources) send metrics into the system. For example, sensors, devices, and other services.
-- The [**clients**](#clients) (Operation Engineers at Nozama) use the Rules API to create and update rules in the system.
-- The [**rules** service](#rules-service) allows users to create and update alarm rules through the API and stores them in the `rules (compacted) topic`.
-- The [**alarms** service](#alarms-service) creates a materialized view from all the rules in the `rules (compacted) topic`, and consumes all metrics from the `metrics topic`. When a metric matches a rule, the service sends an alarm (message) to a Discord channel.
-
-The following diagram represents the flow of data in the system. For example, `client --> rules` indicates that `client` creates rules in the `rules` API.
-
-```mermaid
-graph TD;
-    metricst([metrics Kafka topic]);
-    rulest([rules Kafka topic]);
-
-    sources[metric sources]-->metricst;
-
-    client-->rules;
-    rules-->rulest;
-
-    metricst-->alarms;
-    rulest-->alarms;
-    alarms-->discord;
-
-    style sources stroke:#f66,stroke-width:2px,stroke-dasharray: 5 5
-    style client stroke:#f66,stroke-width:2px,stroke-dasharray: 5 5
-    style metricst stroke:#6f6,stroke-width:2px
-    style rulest stroke:#6f6,stroke-width:2px
-    style discord stroke:#55f,stroke-width:2px
-```
-
-### sources
-
-The sources are all the clients that can integrate with SSRMS to send metrics. For example, servers or sensors.
-
-To make testing easier, you must create scripts that simulate being sources in the [sources folder](./sources/). They must publish metrics to the `metrics` Kafka topic like a real metric source would.
-
-### clients
-
-The clients of SSRMS are used by the engineers of Acme to create and delete rules. Ideally, this would be an app or a website. However, for this prototype they will use `curl` to directly create and update rules using the [Rules API](#rules-service).
-
-### rules service
-
-In SSRMS, there can be many instances of the `rules` service. I.e., the `rules` service is scaled horizontally if necessary.
-
-A rule is defined as the `discord_webhook_url` where alarms must be sent when the metric with name `metric_name` is higher than a `threshold`. For example:
-
-```json
-{
-    "id": "dc0d8a4c-46ea-4667-b6e9-eb7bf033fda9",
-    "metric_name": "packages-received",
-    "threshold": 500,
-    "discord_webhook_url": "https://discordapp.com/api/webhooks/15434354352132/hfaslkdfhjsahldkf_02340lasdhf_fksdlf"
-}
-```
-
-In order for the `clients` to create or delete `rules` to trigger alarms, the `rules` service exposes a simple HTTP REST API. The API for the `rules` service only allows 2 operations:
-- [Create a rule](#post-rules)
-- [Delete a rule](#delete-rulesid)
-
-#### POST /rules
-
-The `clients` can create a new rule through this endpoint. The `rules` service takes each new rule and publishes it to the `rules` Kafka topic. The key in the Kafka topic must be the rule id, and the value the [full rule as a JSON string](https://pythonexamples.org/python-dict-to-json/). 
-
-For example, the `clients` can create a rule to send a Discord message when `packages-received` is higher than 500 in the `rules` service with address `localhost:9090` as follows:
-
-```
-POST http://localhost:9090/rules
-```
-
-Body:
-```json
-{
-    "metric_name": "packages-received",
-    "threshold": 500,
-    "discord_webhook_url": "https://discordapp.com/api/webhooks/15434354352132/hfaslkdfhjsahldkf_02340lasdhf_fksdlf"
-}
-```
-
-Response:
-```json
-{
-    "id": "dc0d8a4c-46ea-4667-b6e9-eb7bf033fda9",
-    "metric_name": "packages-received",
-    "threshold": 500,
-    "discord_webhook_url": "https://discordapp.com/api/webhooks/15434354352132/hfaslkdfhjsahldkf_02340lasdhf_fksdlf"
-}
-```
-
-Then, the `rules` service will publish the following record to the `rules` topic in Kafka:
-
-Key:
-```
-dc0d8a4c-46ea-4667-b6e9-eb7bf033fda9
-```
-
-Value:
-```
-{
-    "id": "dc0d8a4c-46ea-4667-b6e9-eb7bf033fda9",
-    "metric_name": "packages-received",
-    "threshold": 500,
-    "discord_webhook_url": "https://discordapp.com/api/webhooks/15434354352132/hfaslkdfhjsahldkf_02340lasdhf_fksdlf"
-}
-```
-
-#### DELETE /rules/{id}
-
-The `clients` can delete an existing rule through this endpoint. The `rules` service takes each deleted rule and publishes it to the `rules` Kafka topic with an empty value.
-
-For example, the `clients` can delete a rule with id `dc0d8a4c-46ea-4667-b6e9-eb7bf033fda9` in the `rules` service with address `localhost:9090` as follows:
-
-```
-DELETE http://localhost:9090/rules/dc0d8a4c-46ea-4667-b6e9-eb7bf033fda9
-```
-
-Response:
-```json
-{}
-```
-
-Then, the `rules` service will publish the following record to the `rules` topic in Kafka:
-
-Key:
-```
-dc0d8a4c-46ea-4667-b6e9-eb7bf033fda9
-```
-
-Value:
-```
-null
-```
-
-
-### alarms service
-
-In SSRMS, there are many instances of the `alarms` service. I.e., the `alarms` service is scaled horizontally.
+> You can append to the end of the `__cluster_metadata.log` file with the ["a" mode](https://stackoverflow.com/a/4706520) in Python.
 
 > [!TIP]
-> Scaling the `alarms` service horizontally is very important because the number of metrics received in the `metrics` topic can be very large. This also allows the system to be highly available (i.e., if one `alarms` service breaks or is disconnected, the system can continue working with the other ones).
+> You can use [json.dumps](https://www.w3schools.com/python/python_json.asp) to serialize a Python dictionary to a JSON string.
 
-The alarms service has no API. Instead, it reads from the `metrics` and `rules` Kafka topics, and sends alarm messages to Discord when a rule is matched. The following pseudo-code outlines the `alarms` service:
+We recommend that you implement a separate class to handle the metadata log:
 
-```
-rules_materialized_view = {}
-in a background thread {
-    rules_consumer = Consumer("rules")
-    while True {
-        rule_id, new_rule = rules_consumer.poll()
-        if new_rule == "" {
-            rules_materialized_view.delete(rule_id)
-        } else {
-            rules_materialized_view[rule_id] = new_rule
-        }
-    }
-}
+```python
+class KRaft:
+    def _load_metadata_log(self):
+        # TODO, implement in 3.1.2
+        
+    def __init__(self):
+        # TODO
+    
+    def append_to_metadata_log(self, action):
+        # TODO, implement in 3.1.2
 
-metrics_consumer = Consumer("metrics")
-while True {
-    new_metric = metrics_consumer.poll()
-    for rule in rules_materialized_view {
-        if new_metric.name == rule.metric_name && new_metric.value > rule.threshold {
-            send_discord_message(rule.discord_url)
-        }
-    }
-}
+    def read_metadata_log(self, from_offset, max_batch_size):
+        # TODO, implement in 3.1.3
 ```
 
-#### the rules topic
+<details>
+<summary>Sanity check</summary>
 
-The `alarms` service must poll the `rules` topic in a background thread and store all the rules in a dictionary. I.e., it must build a materialized view with all the rules in the topic.
-
-When a rule is added or deleted, the `alarms` service must receive it in near real-time and update the materialized view.
-
-#### the metrics topic
-
-The `alarms` service must poll the `metrics` topic. For each value received, it must check whether it is above the threshold for any of the rules configured for that metric. If it exceeds the threshold, it must send a message to Discord with the metric name, threshold and value.
-
-#### sending messages to Discord
-
-To send messages to Discord, [create a Discord server](https://discord.com/blog/starting-your-first-discord-server) for testing. Then, inside a text channel in your server, [create a Webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks). Once you have copied the `Webhook URL`, you can make a POST request to send a message.
+**test**
 
 ```zsh
-curl -X POST {URL} -H 'Content-Type: application/json' -d '{"content": "Hello from curl"}'
+curl -X POST "http://localhost:8001/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}' -s | jq
+curl -X POST "http://localhost:8001/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}' -s | jq
+curl -X POST "http://localhost:8002/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}' -s | jq
 ```
 
-For a better UX, you can send styled [embeds](https://discord.com/developers/docs/resources/message#embed-object) instead of plaintext content:
+**expected**
+```json
+{
+  "topic_name": "testtopic",
+  "partitions": [
+    {
+      "id": "testtopic-1",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    },
+    {
+      "id": "testtopic-2",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    },
+    {
+      "id": "testtopic-3",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    }
+  ]
+}
+{
+  "detail": "topic testtopic already exists"
+}
+{
+  "detail": "leader is 1, can't accept"
+}
+```
 
+</details>
+
+### [3.1.3] Implement admin API for listing topics (^)
+
+Implement the [GET /admin/v1/topics](#get-adminv1topics) endpoint. You should read the topics from the [__cluster_metadata.log](#metadata-log) file.
+
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
 ```zsh
-curl -X POST {URL} -H 'Content-Type: application/json' -d '{
-    "content": "hello",
-    "embeds": [
+curl -X POST "http://localhost:8001/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}' -s | jq
+curl -X POST "http://localhost:8001/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "othertopic",
+    "partition_count": 3
+}' -s | jq
+curl -X GET "http://localhost:8001/admin/v1/topics" -s | jq
+```
+
+**expected**
+```json
+{
+  "topic_name": "testtopic",
+  "partitions": [
+    {
+      "id": "testtopic-1",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    },
+    {
+      "id": "testtopic-2",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    },
+    {
+      "id": "testtopic-3",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    }
+  ]
+}
+{
+  "topic_name": "othertopic",
+  "partitions": [
+    {
+      "id": "othertopic-1",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    },
+    {
+      "id": "othertopic-2",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    },
+    {
+      "id": "othertopic-3",
+      "replica_brokers": ["1", "2", "3", "4", "5"]
+    }
+  ]
+}
+{
+  "topics": [
+    {
+      "topic_name": "testtopic",
+      "partitions": [
         {
-            "title": "Alarm triggered",
-            "description": "received-packages is 508 which exceeds the rule threshold (500)",
-            "color": 16711680,
-            "fields": [
+          "id": "testtopic-1",
+          "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+          "id": "testtopic-2",
+          "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+          "id": "testtopic-3",
+          "replica_brokers": ["1", "2", "3", "4", "5"]
+        }
+      ]
+    },
+    {
+      "topic_name": "othertopic",
+      "partitions": [
+        {
+          "id": "othertopic-1",
+          "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+          "id": "othertopic-2",
+          "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+          "id": "othertopic-3",
+          "replica_brokers": ["1", "2", "3", "4", "5"]
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+
+
+### [3.1.4] Implement admin API for deleting a topic (^^)
+
+Implement the [DELETE /admin/v1/topics/{topic_name}](#delete-adminv1topicstopic_name) endpoint. You should persist every deleted topic to the [metadata.log](#metadata-log) file.
+
+> [!WARNING]
+> Make sure the `GET /admin/v1/topics` endpoint works as expected after removing a topic.
+
+### [3.1.5] Implement a Python client to create topics (^^)
+
+Create a folder `client` with the following files: `requirements.txt` and `create_topic.py`. Then, implement the [create_topic.py](#create_topicpy) client script.
+
+> [!TIP]
+> You may use [argparse](https://thepythoncode.com/article/how-to-use-argparse-in-python#simple-example) to implement the client script.
+
+> [!TIP]
+> You may use [httpx](https://www.python-httpx.org/quickstart/#sending-json-encoded-data) to make an HTTP request using Python. Remember to add it to the `requirements.txt` file.
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+cd client
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 create_topic.py mynewtopic -p 3 -r 2
+```
+
+**expected**
+```json
+{
+    "topic_name": "mynewtopic",
+    "partitions": [
+        {
+            "id": "mynewtopic-1",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "mynewtopic-2",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "mynewtopic-3",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        }
+    ]
+}
+```
+
+</details>
+
+### [3.1.6] Implement a Python client to list topics (^^)
+
+Implement the [list_topics.py](#list_topicspy) client script.
+
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+python3 create_topic.py mynewtopic -p 4 -r 1
+python3 create_topic.py myothernewtopic -p 2 -r 3
+python3 list_topics.py
+```
+
+**expected**
+```json
+{
+    "topic_name": "mynewtopic",
+    "partitions": [
+        {
+            "id": "mynewtopic-1",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "mynewtopic-2",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "mynewtopic-3",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "mynewtopic-4",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        }
+    ]
+}
+{
+    "topic_name": "myothernewtopic",
+    "partitions": [
+        {
+            "id": "myothernewtopic-1",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "myothernewtopic-2",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        }
+    ]
+}
+{
+    "topics": [
+        {
+            "topic_name": "mynewtopic",
+            "partitions": [
                 {
-                    "name": "Rule id",
-                    "value": "21433034-8078-4f1a-bb8d-1ac996db395d"
+                    "id": "mynewtopic-1",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
                 },
                 {
-                    "name": "Metric name",
-                    "value": "received-packages"
+                    "id": "mynewtopic-2",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
                 },
                 {
-                    "name": "Metric value",
-                    "value": "508"
+                    "id": "mynewtopic-3",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
                 },
                 {
-                    "name": "Rule threshold",
-                    "value": "500"
+                    "id": "mynewtopic-4",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                }
+            ]
+        },
+        {
+            "topic_name": "myothernewtopic",
+            "partitions": [
+                {
+                    "id": "myothernewtopic-1",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                },
+                {
+                    "id": "myothernewtopic-2",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
                 }
             ]
         }
     ]
-}'
+}
 ```
 
-# Additional exercises
+</details>
 
-You can earn an additional 3 marks (over 10) on this project's grade by working on additional exercises. To earn the full +3, you need to complete 5 additional exercises. 
+### [3.1.7] Implement a Python client to delete topics (^^)
 
-### [AD2Q0] Improve the `alarms` service rule matching algorithm
-
-Instead of having a materialized view of `rule_id -> rule`, also materialize `metric_name -> rules` for faster O(1) access when processing metrics.
+Implement the [delete_topic.py](#delete_topicpy) client script.
 
 
-### [AD2Q1] Extend the `rules` service with support for updating rules
+## [3.2] Data plane: Implementing the broker data API
 
-Add a `PUT /rules/{id}` method to the `rules` API which allows updating an existing rule.
+> [!IMPORTANT]
+> The goal of this lab is to complete the broker implementation with the APIs that allow producing and consuming from a topic-partition. When you are already able to produce and consume records from the leader, you will implement partition replication. I.e., replicating the partition log to the other brokers.
+
+### [3.2.1] Implement the API for producing records to a topic-partition (^)
+
+Implement the [POST /data/v1/produce](#post-datav1produce) endpoint. For now, you should ignore the `acks` field. When you receive a produce request, append the record with increasing offset at the end of the [partition log](#partition-log) file.
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+curl -X POST "http://localhost:8001/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}' -s | jq
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "key": "msg1",
+    "payload": "this is my new message!",
+    "acks": "all"
+}' -s | jq
+echo "Produced first message"
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "key": "msg2",
+    "payload": "this is my second message!",
+    "acks": "all"
+}' -s | jq
+echo "Produced second message"
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "key": "msg3",
+    "payload": "this is my third message!",
+    "acks": "all"
+}' -s | jq
+echo "Produced third message"
+```
+
+**expected**
+
+If you go to the `/data/testtopic-1/00000000000000000000.log` file in the broker 1 file system using Docker Desktop, you should see the three records, one on each line.
+
+</details>
 
 
-### [AD2Q2] Extend the `rules` service with support for getting rules
 
-Add a `GET /rules/{id}` and `GET /rules` methods to the `rules` API. You will need to add a consumer and a materialized view of rules in the `rules` service to support this usecase.
+### [3.2.2] Implement the API for consuming records from a topic-partition (^)
 
-### [AD2Q3] Create a web client for the rules service
+Implement the [POST /data/v1/consume](#post-datav1consume) endpoint. For now, ignore the `follower_broker_id` field.
 
-Use the `rules` API to create a simple HTML + JS website that allows viewing, creating, updating and deleting rules.
+When you receive a consume request, read the [partition log](#partition-log). If `last_offset` is -1, return the first `max_batch_size` records. Otherwise, skip lines until you reach `last_offset`, then, return the next `max_batch_size` records.
 
-### [AD2Q4] Create an `ingest` service
+> [!TIP]
+> You can pass a list of brokers using [environment variables](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/). For example: `1@broker-1:80,2@broker-2:80,3@broker-3:80,4@broker-4:80,5@broker-5:80`.
 
-Instead of allowing source devices to publish metrics directly to Kafka, create an `ingest` service with an API that allows POSTing metrics. Then, the `ingest` service sends them to the Kafka topic.
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+curl -X POST "http://localhost:8001/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}' -s | jq
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "key": "msg1",
+    "payload": "this is my new message!",
+    "acks": "all"
+}' -s
+echo "Produced first message"
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "key": "msg2",
+    "payload": "this is my second message!",
+    "acks": "all"
+}' -s
+echo "Produced second message"
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "key": "msg3",
+    "payload": "this is my third message!",
+    "acks": "all"
+}' -s
+echo "Produced third message"
+curl -X POST "http://localhost:8001/data/v1/consume" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "last_offset": -1,
+    "max_batch_size": 2
+}' -s | jq
+```
+
+**expected**
+
+```json
+{
+  "topic_name": "testtopic",
+  "partition_count": 3
+}
+Produced first message
+Produced second message
+Produced third message
+{
+  "last_offset": 1,
+  "records": [
+    {
+      "offset": 0,
+      "key": "msg2",
+      "payload": "this is my second message!"
+    },
+    {
+      "offset": 1,
+      "key": "msg3",
+      "payload": "this is my third message!"
+    }
+  ]
+}
+```
+
+</details>
+
+
+### [3.2.3] Replicate partition to follower brokers (^)
+
+Until now, the leader broker stores the only copy of every partition since it is the one that handles all the produce and consume requests. However, this is not acceptable in terms of durability. What if the broker dies, or if its partition log is corrupted? We must replicate partitions to the rest of brokers.
+
+To do so, you will need to create a background task in every broker that calls the leader to:
+- Get active topics with [GET /admin/v1/topics](#get-adminv1topics)
+- For each topic and partition, consume any new records with [POST /data/v1/consume](#post-datav1consume)
+
+To do so continuously in the background, you may use code like this:
+
+```python
+async def background_loop():
+    while True:
+        logging.info("Here!")
+        await asyncio.sleep(1)
+
+@app.on_event("startup")
+async def schedule_periodic():
+    loop = asyncio.get_event_loop()
+    loop.create_task(background_loop())
+```
+
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+curl -X POST "http://localhost:8001/admin/v1/topics" -H 'Content-Type: application/json' -d '{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}' -s | jq
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "payload": "this is my new message!",
+    "acks": "all"
+}' -s
+echo "Produced first message"
+curl -X POST "http://localhost:8001/data/v1/produce" -H 'Content-Type: application/json' -d '{
+    "topic_partition": "testtopic-1",
+    "payload": "this is my second message!",
+    "acks": "all"
+}' -s
+echo "Produced second message"
+```
+
+**expected**
+
+If you open the partition log file using Docker Desktop for the leader broker (1), the messages should be there.
+
+If you open the partition log file using Docker Desktop for every follower broker (2-5), the messages should also be there.
+
+</details>
+
+
+### [3.2.4] Implement a Python client to produce records (^^)
+
+Implement the [produce.py](#producepy) client script.
+
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+python3 create_topic.py testtopic
+python3 produce.py testtopic
+Key: key1
+Payload: msg1
+> OK
+Key: key2
+Payload: msg2
+> OK
+```
+
+**expected**
+
+If you open the partition log from the leader broker using the Docker Desktop file viewer, you should see the messages in the file.
+
+</details>
+
+### [3.2.5] Implement a Python client to consume records (^^)
+
+Implement the [consume.py](#consumepy) client script.
+
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+In one terminal, create a topic and start producing:
+
+```zsh
+python3 create_topic.py testtopic
+python3 produce.py testtopic
+Key: key1
+Payload: msg1
+> OK
+Key: key2
+Payload: msg2
+> OK
+```
+
+In another terminal, start the consumer in parallel:
+```zsh
+python3 consume.py testtopic-1
+```
+
+**expected**
+
+Every message you produce, if its stored in the partition 1 (depending on the key), should be visible through the producer.
+
+</details>
+
+
+### [3.2.6] Implement produce acknowldgements (^^^^)
+
+The goal of this task is waiting for all consumers to have guaranteed storing a record before completing each produce request.
+
+First, extend your [POST /data/v1/produce](#post-datav1produce) endpoint to accept the `acks` field:
+- When `acks=1`:
+    - store the record in the leader partition log
+    - return the `204` response
+- When `acks=all`:
+    - store the record in the leader partition log
+    - wait until all follower brokers that replicate this partition have a `last_offset` greater than or equal to this record's offset 
+    - return the `204` response
+
+To do this, you will need to track which is the last offset that every follower broker has consumed. To this end, extend your [POST /data/v1/consume](#post-datav1consume) endpoint to accept the `follower_broker_id` field. When the `follower_broker_id` field is null, it means that a client is consuming from the partition. However, when the `follower_broker_id` field is not null, it means that a follower broker is consuming a partition to replicate it to its partition log. When a follower consumes records, use the `last_offset` from the request body as an acknowledgement of the last record it has stored in its log.
+
+
+### [3.2.7] Dividing the partition log in segments (^^^^)
+
+Until now, the [partition log](#partition-log) is stored always in the `00000000000000000000.log` file of the topic partition folder.
+
+As you can imagine, storing all the records from a partition in a single file is not a good idea. It makes operations, performance and overall ease of use really hard.
+
+To this end, define a `MAX_SEGMENT_SIZE_BYTES`. When the `00000000000000000000.log` file exceeds that size, create a new segment file in the same folder to continue appending records. For example, `00000000000000005000.log` (assuming the last record of the first segment had offset 4999). Continue creating new segment files whenever they exceed the `MAX_SEGMENT_SIZE_BYTES` size.
+
+
+### [3.2.8] Storing the partition log in binary format (^^^^)
+
+Until now, the [partition log](#partition-log) is stored in text format. One record per line.
+
+In reality, Kafka stores it in a binary format. Adapt the implementation of [POST /data/v1/consume](#post-datav1consume) and [POST /data/v1/produce](#post-datav1produce) to work with binary files.
+
+You may use this format for each record:
+- 8 bytes, store the offset
+- 8 bytes, store the payload size in bytes
+- all the payload bytes
+
 
 ```mermaid
-graph TD;
-    metricst([metrics Kafka topic]);
-    rulest([rules Kafka topic]);
-
-    sources[metric sources]-->ingest;
-    ingest-->metricst;
-
-    client-->rules;
-    rules-->rulest;
-
-    metricst-->alarms;
-    rulest-->alarms;
-    alarms-->discord;
-
-    style sources stroke:#f66,stroke-width:2px,stroke-dasharray: 5 5
-    style client stroke:#f66,stroke-width:2px,stroke-dasharray: 5 5
-    style metricst stroke:#6f6,stroke-width:2px
-    style rulest stroke:#6f6,stroke-width:2px
-    style discord stroke:#55f,stroke-width:2px
+---
+title: "Record Binary Log Format"
+---
+packet-beta
+  0-7: "offset"
+  8-15: "payload size"
+  16-63: "Data (variable length)"
 ```
 
-### [AD2Q5] Use the docker compose `deploy` attribute to horizontally scale services
+Then, use `file.seek()` to skip all the payload bytes and go directly to the next record while looking for an offset.
 
-Instead of manually copying the services many times in the docker compose file to scale them horizontally, use the [deploy attribute](https://docs.docker.com/compose/compose-file/deploy/) to specify the number of replicas.
+### [3.2.9] Indexing offsets (^^^^)
 
-### [AD2Q6] Add tagging support
+You might have noticed that it is very inefficient to read all lines in a partition one by one until we find the desired offset. Instead, create a `.index` file for each segment that maps some offsets to their initial byte position in the corresponding `.log` file. 
 
-Consider the usecase where we have many machines of type `conveyorbelt`, and they all publish the same `conveyorbelt-velocity-12354` metric. Instead of publishing many metrics with different names (`conveyorbelt-velocity-12354`, `conveyorbelt-velocity-12355`, `conveyorbelt-velocity-12356`, ...) depending on the machine id, allow publishing metrics with tags. This will allow a single rule to be created for all metrics of the same type, regardless of the source. For example: `conveyorbelt-velocity` (tags: `machine_id:12354`). Implement the necessary changes in `alarms`, `rules` and `ingest` services and APIs.
+Then, improve the implementation of [POST /data/v1/consume](#post-datav1consume) so that:
+- Check the `last_offset` the client requests
+- Use the index to get the byte position of the greatest offset in the index that is smaller than `last_offset`.
+- Use the `seek(byte_position)` function to directly jump to that position in the log file.
 
-### [AD2Q7] Add rule operator support
 
-Add an additional attribute to `rules`: `operator`. The `operator` field can be `>` or `<`. Instead of always triggering alarms when the metric is above the threshold, these operators should allow triggering alarms when a metric is below a threshold. Implement the necessary changes in the `alarms` and `rules` services and APIs.
+## [3.3] Control plane: distributed metadata with KRaft
 
-### [AD2Q8] Add cooldown support
+> [!IMPORTANT]
+> Until now, the leader has always been broker 1. What if broker 1 dies? Then the system goes down and no client can't produce or consume from any topic. We need to fix this! To this end, we will allow the brokers to decide a leader on their own through the Raft consesus algorithm. If the leader goes down, a new broker will become the leader.
 
-Add an additional attribute to `rules`: `cooldown_seconds`. Whenever a rule has sent an alarm notification to Discord, don't send any new alarms from that rule until `cooldown_seconds` have passed to avoid spamming the channel. Implement the necessary changes in the `alarms` and `rules` services and APIs.
 
-### [AD2Q9] Add windowing support
+> [!TIP]
+> Take a look at the [Apache Kafka (Control Plane)](https://docs.google.com/presentation/d/1IGJSySZDhnkubCR-aOCekYrfZf0RJbVp_jmBYka_t8Y/edit?usp=sharing) slides to understand the consensus protocol.
 
-Add an additional attribute to `rules`: `type`. The `type` field can be `instantaneous` (default) or `window_average`. Instead of always triggering alarms when the metric is above/below the threshold, these operators should allow triggering alarms when the average in a `window_duration_seconds` window of the metric is above/below the threshold. Implement the necessary changes in the `alarms` and `rules` services and APIs.
 
-### [AD2Q10] Add JWT-based AuthN support to the rules and ingest services
+We recommend that you extend the class you already implemented for handling metadata during 3.3:
 
-Only allow publishing rules and metrics with a valid JWT token.
+```python
 
-### [AD2Q11] Materialized view initialization in the alarms service
+class KRaft:
+    def _persist_quorum_state(self, quorum_state):
+        # TODO, implement in 3.3.1
 
-Do not start processing metrics in the `alarms` service until all rules from the `rules` topic have been read. In other words:
-- Read the rules topic until reaching the head and populate the materialized view
-- Then, start consuming the `metrics` topic
+    def _load_quorum_state(self):
+        # TODO, implement in 3.3.1
 
-Otherwise, metrics might be consumed before the rules are in the materialized view.
+    def _load_metadata_log(self):
+        # TODO, implement in 3.1.2
+        
+    def __init__(self, my_voter_id, voter_count):
+        # TODO
+    
+    def become_candidate(self):
+        # TODO, implement in 3.3.3
 
-### [AD2Q12] Use styled embeds to send Discord messages
+    def vote_for_candidate(
+        self, 
+        candidate_epoch: int, 
+        candidate_last_offset: int, 
+        candidate_last_offset_epoch: int, 
+        candidate_id: str
+    ) -> bool:
+        # TODO, implement in 3.3.3
 
-Use styled embeds to improve the messages you send to Discord.
+    def new_leader(
+        self,
+        leader_id: str,
+        leader_epoch: int
+    ) -> bool:
+        # TODO, implement in 3.3.1
+    
+    def get_voted(self):
+        """ 
+        return the voted broker id if there is a vote in the quorum state for the current epoch,
+        otherwise returns -1
+        """
+        # TODO, implement in 3.3.1
 
-### [AD2Q13] Add threshold crossing support
+    def get_leader(self):
+        """ 
+        return the leader id if there is one in the quorum state for the current epoch,
+        otherwise returns -1
+        """
+        # TODO, implement in 3.3.1
 
-Change the behaviour of rule triggering, so that an alarm is only triggered when the value changes from below to above the threshold. I.e., if you receive a value above the threshold multiple times, don't trigger the alarm again until it goes below the threshold at least once.
+    def append_to_metadata_log(self, action, body, offset = None, epoch = None):
+        # TODO, extend with offset and epoch in 3.3.5
+
+    async def wait_for_commit(self, offset):
+        # TODO, implement in 3.3.7
+
+
+    def read_metadata_log(self, from_offset, from_offset_epoch, max_batch_size, follower_id):
+        # TODO, extend in 3.3.7
+```
+
+
+### [3.3.1] Initializing the quorum-state file (^^^)
+
+The KRaft protocol needs to persist the: leader id, leader epoch and voted id. When the broker starts up, create an empty `metadata/quorum-state` file with the default values if it does not exist:
+
+```json
+{
+    "leader_id": -1,
+    "leader_epoch": 0,
+    "voted_id": -1
+}
+```
+
+If it exists, it should load them.
+
+### [3.3.2] Voting (^^^)
+
+Implement the [vote request endpoint](#post-kraftv1voterequest). 
+
+This endpoint is called by a candidate which is trying to become the leader.
+
+This endpoint should use the `voted_id` and `leader_epoh` from the quorum state, as well as the current epoch and its metadata's log last epoch/offset to determine whether to grant the requested vote.
+
+
+<details>
+<summary>Sanity check</summary>
+
+Make sure that only the first vote in a term/epoch is granted, even if the broker is restarted!
+
+**test**
+
+```zsh
+curl "http://localhost:8001/kraft/v1/voteRequest" -s -H "Content-Type: application-json" -d '{
+    "candidate_epoch": 1,
+    "last_offset": 0,
+    "last_offset_epoch": -1,
+    "candidate_id": "3"
+}' | jq
+# restart broker 1 now
+curl "http://localhost:8001/kraft/v1/voteRequest" -s -H "Content-Type: application-json" -d '{
+    "candidate_epoch": 1,
+    "last_offset": 0,
+    "last_offset_epoch": -1,
+    "candidate_id": "4"
+}' | jq
+curl "http://localhost:8001/kraft/v1/voteRequest" -s -H "Content-Type: application-json" -d '{
+    "candidate_epoch": 2,
+    "last_offset": 0,
+    "last_offset_epoch": -1,
+    "candidate_id": "4"
+}' | jq
+```
+
+**expected**
+```json
+{
+  "granted": true
+}
+{
+  "granted": false,
+  "leader_epoch": 0,
+  "leader_id": -1,
+}
+{
+  "granted": true
+}
+```
+
+</details>
+
+### [3.3.3] Begining a quorum (^^^)
+
+Implement the [begin quorum epoch endpoint](#post-kraftv1beginquorumepoch).
+
+This endpoint is called by a recently elected leader to notify it has won the election.
+
+This endpoint should update the quorum state file to store the new leader.
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+curl "http://localhost:8001/kraft/v1/beginQuorumEpoch" -s -H "Content-Type: application-json" -d '{
+    "leader_epoch": 1,
+    "leader_id": "3"
+}' | jq
+```
+
+**expected**
+
+- If you go to the quorum state file, the new leader id and epoch should be stored there.
+- If you create a new topic in broker 3 and produce to it, broker 1 should start consuming the partitions from broker 3 and replicating them.
+- If you check `curl "http://localhost:8001/healthcheck"`, it should have `3` as the leader.
+
+</details>
+
+### [3.3.4] Elections after initialization (^^^)
+
+When the broker starts, if the `leader_id` from the quorum state file is `-1` (no leader), each broker should:
+- wait a random amount of seconds (to reduce split elections)
+- if there is an active candidate for the current epoch, wait 5s
+- if there is still no leader, become a candidate
+- then, start collecting votes from all other brokers using the [/voteRequest endpoint](#post-kraftv1voterequest)
+    - if it wins the election, store it in its quorum state file and notify all other brokers using the [/beginQuorumEpoch endpoint](#post-kraftv1beginquorumepoch)
+    - if it looses the election and there is still no leader, it should wait a random amount of seconds and try again
+
+### [3.3.5] Replicating the metadata log (^^^)
+
+Implement the [/fetchMetadata endpoint](#post-kraftv1fetchmetadata).
+
+When the broker is not the leader, it should use the [/fetchMetadata endpoint](#post-kraftv1fetchmetadata) to fetch new metadata entries from the leader's log every second. For every metadata entry it receives, it should store it in its own metadata log.
+
+### [3.3.6] Handling metadata log divergences (^^^^)
+
+Extend the [/fetchMetadata endpoint](#post-kraftv1fetchmetadata) such that if the follower last fetched epoch and offset are not coherent with the leader's log, the leader returns the diverging epoch and offset. Then, the follower should truncate its log and fetch again.
+
+### [3.3.7] Waiting to commit control plane changes (^^^^)
+
+Modify the existing [POST /admin/v1/topics endpoint](#post-adminv1topics) and [DELETE /admin/v1/topics/{name} endpoint](#delete-adminv1topicstopic_name) to wait until a majority of brokers have stored the changes on their log.
+
+Use the `last_offset` and `follower_broker_id` fields each follower sends in the [POST /kraft/v1/fetchMetadata endpoint](#post-kraftv1fetchmetadata) to track up to which change has each follower replicated the metadata log.
+
+When `F+1` brokers (`F` followers + the leader, a majority) have stored the metadata change in their log, consider it committed. Then, finally respond to the client request successfuly.
+
+
+### [3.3.8] Elections after leader failure (^^^)
+
+When the leader is down (i.e. you stop it), requests to consume will fail. In such a scenario, the follower should become a candidate:
+- start collecting votes from all other brokers using the [/voteRequest endpoint](#post-kraftv1voterequest)
+- if it wins the election, store it in its quorum state file and notify all other brokers using the [/beginQuorumEpoch endpoint](#post-kraftv1beginquorumepoch)
+- if it looses the election and there is still no leader, it should wait a random amount of seconds and try again
+
+### [3.3.9] Follower recovery (^^^)
+
+When a broker recovers from being disconnected, whether it previously was a follower or a leader (and it has since been replaced), it should be able to reconnect to the system without causing an election.
+
+You should extend the leader implementation so that, if sending the begin quorum epoch fails, it retries forever until: either it stops being the leader, or the follower responds.
+
+# Design
+
+SSKafka is a simplified Kafka system using a KRaft-like protocol for concensus. SSKafka cuts some (many) corners to simplify the project.
+
+|  | Kafka  | SSKafka     |
+| ------------   | -------------    | -------------   |
+| Partition replication  | Only a subset of brokers contain partition replicas  | All brokers have replicas of all partitions |
+| Partition leadership  | The active controller selects different brokers for each to be the leader of a partition  | The active controller is the leader broker for all partitions  |
+| Partition logs (file I/O)  | Very optimized access to read and write to the logs | Naive |
+| Producing (`ack=all`) | Only ISRs need to acknowledge persisting a record | All partition replicas need to acknowledge persisting a record |
+| Controllers vs brokers | Kafka treats controllers and brokers as two different services, which might be deployed to the same or different servers | The broker and controller are always deployed as the same service together |
+
+## Broker
+
+### File system
+
+Every broker persists in its file system the following data:
+
+- **metadata log**, e.g. topics which have been created
+- **topic-partition log**, e.g. the records Produced to a topic-partition
+
+```
+/metadata
+    __cluster_metadata.log
+/data
+    topic1-1
+        00000000000000000000.log
+    topic1-2
+        00000000000000000000.log
+    topic1-3
+        00000000000000000000.log
+    anothertopic-1
+        00000000000000000000.log
+```
+
+#### Metadata log
+
+The metadata log is a file that stores all the system metadata. E.g., every topic that has been created in the system.
+
+Each line contains the following space separated fields:
+- offset
+- epoch/term
+- type
+- body (as a JSON string)
+
+For example:
+
+```
+0 0 create-topic {"topic_name":"topic1","partition_count":3}
+1 0 create-topic {"topic_name":"anothertopic","partition_count":3}
+2 1 delete-topic {"topic_name":"anothertopic"}
+3 3 create-topic {"topic_name":"othertopic","partition_count":3}
+```
+
+When reading the `__cluster_metadata.log` file, every record in the log is applied to the state of the previous ones. For example, the previous example log should be materialized as the following state when you read it:
+
+```json
+{
+    "topics": {
+        "topic1": {
+            "topic_name":"topic1",
+            "partition_count":3
+        },
+        "othertopic": {
+            "topic_name":"othertopic",
+            "partition_count":3
+        }
+    }
+}
+```
+
+The `__cluster_metadata.log` is stored in the the folder `/metadata/` of the broker.
+
+#### Partition log
+
+The partition log is a file that stores all the records in a partition. E.g., every record that has been produced to a partition.
+
+Each line contains an offset, key and a body, separated by a pace. The body is a string, with whatever content the client has published. E.g. it might be JSON, or a simple string, or a base64 encoded bytes blob.
+
+For example:
+
+```
+0 key1 this is the first message i sent!
+1 key2 this is the second message i sent!
+2 key3 this is the third message i sent!
+```
+
+This is another valid example:
+
+```
+0 key1 {"user":125,"action":"bought","product_id":"toaster-123","timestamp":1748986405}
+1 key1 {"user":389,"action":"bought","product_id":"fridge-24","timestamp":1748986440}
+2 key2 {"user":123,"action":"bought","product_id":"washing-machine-1","timestamp":1748986445}
+3 key9 {"user":125,"action":"bought","product_id":"laptop-73264","timestamp":1748986476}
+```
+
+Every partition log is stored in the the folder `/data/<topic_name>-<partition_number>/00000000000000000000.log` of the broker.
+
+### Broker API
+
+#### GET /healthcheck
+
+Always returns a 200 confirming the broker is up, including some metadata about the system.
+
+**response status**
+
+- **200**, the broker is up
+
+**response body**
+
+- **status**, "up"
+- **broker_id**, the ID of this broker
+- **leader_broker_id**, the ID of the leader broker in the system
+
+```json
+{
+    "status": "up",
+    "broker_id": "<broker_id>",
+    "leader_broker_id": "<leader_broker_id>"
+}
+```
+
+#### POST /admin/v1/topics
+
+Create a new topic configuring the number of partitions.
+
+**request body**
+
+- **topic_name**, the name of the topic
+- **partition_count**, the number of partitions that compose the topic
+
+```json
+{
+    "topic_name": "testtopic",
+    "partition_count": 3
+}
+```
+
+**response status**
+
+- **201**, the topic has been created
+- **400**, if the topic name contains dashes ("-")
+- **409**, the topic already exists
+- **421**, if the broker is not the leader
+
+**response body**
+
+- **topic_name**, the name of the created topic
+- **partitions**, the list of partitions of this topic
+    - **id**, the topic partition id
+    - **replica_brokers**, the list of broker ids that have replicas (in SSKafka, its always all the brokers)
+
+```json
+{
+    "topic_name": "testtopic",
+    "partitions": [
+        {
+            "id": "testtopic-1",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "testtopic-2",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "testtopic-3",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        }
+    ]
+}
+```
+
+#### GET /admin/v1/topics
+
+Retrieve existing topics.
+
+**response status**
+
+- **200**, the list of topics
+- **421**, if the broker is not the leader
+
+**response body**
+
+- **topics**, array of all topics in the system
+    - **topic_name**, the name of the created topic
+    - **partitions**, the list of partitions of this topic
+        - **id**, the topic partition id
+        - **replica_brokers**, the list of broker ids that have replicas (in SSKafka, its always all the brokers)
+
+```json
+{
+    "topics": [
+        {
+            "topic_name": "testtopic",
+            "partitions": [
+                {
+                    "id": "testtopic-1",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                },
+                {
+                    "id": "testtopic-2",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                },
+                {
+                    "id": "testtopic-3",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                }
+            ]
+        },
+        {
+            "topic_name": "othertopic",
+            "partition_count": [
+                {
+                    "id": "othertopic-1",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                }
+            ]
+        }
+    ]
+}
+```
+
+
+#### DELETE /admin/v1/topics/{topic_name}
+
+Delete a topic.
+
+**path parameters**
+
+- **topic_name**, the name of the topic to be removed
+
+**response status**
+
+- **204**, if the topic has been removed
+- **421**, if the broker is not the leader
+- **404**, if the topic does not exist
+
+#### POST /data/v1/produce
+
+Store a record in a topic-partition.
+
+**request body**
+
+- **key**, record key
+- **payload**, record body (the string to be store in the partition)
+- **topic_partition**, the name of the topic + `-` + the partition number
+- **acks**, `all` (if all brokers that have a replica of the partitionmust acknowledge storing the record), `1` (if the leader broker doesn't need to wait for all replicas to acknowledge storing the record)
+
+```json
+{
+    "key": "msg1",
+    "payload": "this is a message published by a client!!",
+    "topic_partition": "mytopic-1",
+    "acks": "all"
+}
+```
+
+**response status**
+
+- **204**, if the record has been stored
+- **421**, if the broker is not the leader
+- **404**, if the topic or the partition don't exist
+
+#### POST /data/v1/consume
+
+Read records from a topic-partition.
+
+**request body**
+
+- **last_offset**, read records with offset greater than this one (`-1` to read a partition from the beggining)
+- **topic_partition**, the name of the topic + `-` + the partition number
+- **max_batch_size**, the maximum number of records to return
+- **follower_broker_id**, an optional broker id (used for broker to broker partition replication)
+
+```json
+{
+    "last_offset": -1,
+    "topic_partition": "mytopic-1",
+    "max_batch_size": 100,
+    "follower_broker_id": null
+}
+```
+
+**response status**
+
+- **200**, if the records have been read
+- **421**, if the broker is not the leader
+- **404**, if the topic or the partition don't exist
+
+**response body**
+
+- **last_offset**, the last offset read and returned (`-1` if the partition is empty)
+- **records**, an array of polled records (of at most `max_batch_size` length)
+    - **offset**, the offset of the record
+    - **key**, the key of the record (whatever the client chose when publishing)
+    - **payload**, the payload of the record (whatever the client published)
+
+```json
+{
+    "last_offset": 2,
+    "records": [
+        {
+            "offset": 0,
+            "key": "msg1",
+            "payload": "My first message!"
+        },
+        {
+            "offset": 1,
+            "key": "msg2",
+            "payload": "My second message!"
+        },
+        {
+            "offset": 2,
+            "key": "msg3",
+            "payload": "My third message!"
+        }
+    ]
+}
+```
+
+
+#### POST /kraft/v1/voteRequest
+
+Ask the broker for a vote to become the leader. Returns `true` only IIF:
+
+- it has not voted in this term, 
+- the candidate term is >= than its term, 
+- candidate last metadata offset >= its last metadata offset
+ 
+**request body**
+
+- **candidate_epoch**, the term of the candidate
+- **last_offset**, the candidate's last offset in its metadata log
+- **last_offset_epoch**, the candidate's last offset term/epoch in its metadata log
+- **candidate_id**, the id of the candidate broker
+
+```json
+{
+    "candidate_epoch": 13,
+    "last_offset": 18,
+    "last_offset_epoch": 12,
+    "candidate_id": "broker-2"
+}
+```
+
+**response status**
+
+- **200**, the vote request has been received
+
+**response body**
+
+- **granted**, `true` if the broker grants the vote, `false` otherwise
+
+```json
+{
+    "granted": true
+}
+```
+
+#### POST /kraft/v1/fetchMetadata
+
+Read records from the metadata log.
+
+**request body**
+
+- **last_offset**, read records with offset greater than this one (`-1` to read metadata from the beginning)
+- **last_offset_epoch**, epoch of the last offset (`-1` to read metadata from the beginning)
+- **max_batch_size**, the maximum number of records to return
+- **follower_broker_id**, used by the leader to track offsets of each broker and committing
+
+```json
+{
+    "last_offset": -1,
+    "last_offset_epoch": -1,
+    "max_batch_size": 100,
+    "follower_broker_id": "2"
+}
+```
+
+**response status**
+
+- **200**, if the records have been read
+- **421**, if the broker is not the leader
+
+**response body**
+
+- **records**, an array of polled records (of at most `max_batch_size` length)
+    - **offset**, the offset of the record
+    - **epoch**, the epoch of the record
+    - **action**, the action (e.g. `create-topic` or `delete-topic`)
+    - **payload**, the payload of the record (whatever the client published)
+
+```json
+{
+    "records": [
+        {
+            "offset": 0,
+            "epoch": 1,
+            "action": "create-topic",
+            "payload": {
+                "topic_name": "t1",
+                "partitions": [
+                    {
+                        "id": "t1-1",
+                        "replica_brokers": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "offset": 1,
+            "epoch": 1,
+            "action": "create-topic",
+            "payload": {
+                "topic_name": "t2",
+                "partitions": [
+                    {
+                        "id": "t2-1",
+                        "replica_brokers": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                        ]
+                    },
+                    {
+                        "id": "t2-2",
+                        "replica_brokers": [
+                            "1",
+                            "2",
+                            "3",
+                            "4",
+                            "5"
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "offset": 2,
+            "epoch": 2,
+            "action": "delete-topic",
+            "payload": {
+                "topic_name": "t1"
+            }
+        }
+    ]
+}
+```
+
+## Client
+
+The client is a library of Python scripts which allow doing the basic operations of SSKafka leveraging the [Broker API](#broker-api) under the hood to work. 
+
+### create_topic.py
+
+The `create_topic.py` client script should use the [POST /admin/v1/topics](#post-adminv1topics) endpoint to create a topic.
+
+For example:
+
+```zsh
+python3 client/create_topic.py mynewtopic -p 4 -r 3
+```
+
+```json
+{
+    "topic_name": "testtopic",
+    "partitions": [
+        {
+            "id": "testtopic-1",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "testtopic-2",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "testtopic-3",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        },
+        {
+            "id": "testtopic-4",
+            "replica_brokers": ["1", "2", "3", "4", "5"]
+        }
+    ]
+}
+```
+
+**positional arguments**
+- **topic_name**, the name of the topic
+
+
+**optional arguments**
+- **-p**, the number of partitions (`3` by default)
+- **-r**, the number of replicas per topic (`3` by default)
+- **-b**, the list of brokers (`1@localhost:8001,2@localhost:8002,3@localhost:8003,4@localhost:8004,5@localhost:8005` by default)
+
+> If the first broker on the broker list (`-b`) is not the leader (i.e. it returns a 421), the client should send the request to the leader.
+
+**output**
+
+The topic in JSON as returned by the API, or the error in JSON as returned by the API if its not successful.
+
+**exit code**
+- **0**, if the topic is created successfully
+- **1**, otherwise
+
+
+### list_topics.py
+
+The `list_topics.py` client script should use the [GET /admin/v1/topics](#get-adminv1topics) endpoint to list all topics.
+
+
+```zsh
+python3 list_topics.py
+```
+
+```json
+{
+    "topics": [
+        {
+            "topic_name": "testtopic",
+            "partitions": [
+                {
+                    "id": "testtopic-1",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                },
+                {
+                    "id": "testtopic-2",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                },
+                {
+                    "id": "testtopic-3",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                }
+            ]
+        },
+        {
+            "topic_name": "cooltopic",
+            "partitions": [
+                {
+                    "id": "cooltopic-1",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                },
+                {
+                    "id": "cooltopic-2",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                }
+            ]
+        },
+        {
+            "topic_name": "cooltopic2",
+            "partitions": [
+                {
+                    "id": "cooltopic2-1",
+                    "replica_brokers": ["1", "2", "3", "4", "5"]
+                }
+            ]
+        }
+    ]
+}
+```
+
+**optional arguments**
+- **-b**, the list of brokers (`1@localhost:8001,2@localhost:8002,3@localhost:8003,4@localhost:8004,5@localhost:8005` by default)
+
+> If the first broker on the broker list (`-b`) is not the leader (i.e. it returns a 421), the client should send the request to the leader.
+
+**output**
+
+The topic in JSON as returned by the API, or the error in JSON as returned by the API if its not successful.
+
+**exit code**
+- **0**, if the topic have been retrieved successfully
+- **1**, otherwise
+
+### delete_topic.py
+
+The `delete_topic.py` client script should use the [DELETE /admin/v1/topics/{topic_name}](#delete-adminv1topicstopic_name) endpoint to delete a topic.
+
+
+For example:
+
+```zsh
+python3 client/delete_topic.py mynewtopic
+```
+
+**positional arguments**
+- **topic_name**, the name of the topic
+
+
+**optional arguments**
+- **-b**, the list of brokers (`1@localhost:8001,2@localhost:8002,3@localhost:8003,4@localhost:8004,5@localhost:8005` by default)
+
+> If the first broker on the broker list (`-b`) is not the leader (i.e. it returns a 421), the client should send the request to the leader.
+
+**output**
+
+Nothing, or the error in JSON as returned by the API if its not successful.
+
+**exit code**
+- **0**, if the topic is deleted successfully
+- **1**, otherwise
+
+
+### produce.py
+
+The `produce.py` client script should use the [POST /data/v1/produce](#post-datav1produce) endpoint to produce records to a topic-partition. It should read keys and payloads from `stdin` and publish them, one by one, until the user enter an empty line.
+
+It should use a hash with a modulo to decide, depending on the key, which partition to produce the record to.
+
+For example:
+
+```zsh
+python3 client/produce.py mynewtopic
+```
+
+```
+Key: msg1
+Payload: my first message
+> OK
+
+Key: msg2
+Payload: my second message
+> OK
+
+Key: msg3
+Payload: my third message
+> OK
+
+```
+
+**positional arguments**
+- **topic**, the name of the topic
+
+**optional arguments**
+- **-a**, `all` if all brokers must acknowledge storing the record or `0` if it is fire and forget (`all` by default)
+- **-b**, the list of brokers (`1@localhost:8001,2@localhost:8002,3@localhost:8003,4@localhost:8004,5@localhost:8005` by default)
+
+> If the first broker on the broker list (`-b`) is not the leader (i.e. it returns a 421), the client should send the request to the leader.
+
+**output**
+
+A line saying `> OK` for every message the user enters that has been successfully published to the leader broker.
+
+**exit code**
+- **0**, if the user enters an empty line
+- **1**, if a record can't be published
+
+
+### consume.py
+
+The `consume.py` client script should use the [POST /data/v1/consume](#post-datav1consume) endpoint to consume records from a topic-partition. It should print new records to the terminal when they are received until the user exits (`ctrl+C`).
+
+For example:
+
+```zsh
+python3 client/consume.py mynewtopic-4
+```
+
+```
+[0] [msg1] my first message
+[1] [msg2] my second message
+[2] [msg3] my third message
+```
+
+**positional arguments**
+- **topic_partition**, the name of the topic + `-` + the number of the partition
+
+**optional arguments**
+- **-s**, the maximum batch size when consuming (`100` by default)
+- **-b**, the list of brokers (`1@localhost:8001,2@localhost:8002,3@localhost:8003,4@localhost:8004,5@localhost:8005` by default)
+
+> If the first broker on the broker list (`-b`) is not the leader (i.e. it returns a 421), the client should send the request to the leader.
+
+**output**
+
+A line with the offset (e.g. `[2]`), record key (e.g. `[msg2]`) and the record payload, for each record in the topic-partition.
+
+**exit code**
+- **0**, if the user exits with Ctrl+C
+- **1**, if polling records fails

@@ -3,4 +3,4 @@ services:
   fastapiquickstart:
     build: .
     ports:
-      - "8001:80"
+      - "8000:80"

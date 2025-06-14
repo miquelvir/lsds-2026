@@ -1,57 +1,44 @@
 # Building HDFS from scratch with Python
 
-The goal of this lab is to build a distributed file storage system that allows the user to upload and download files, which we will call SSHDFS (Super Simple HDFS).
+The goal of this lab is to build a distributed file storage system that allows the user to upload and download files, which we will call SSHDFS (Super Simple HDFS). This lab is inspired by [The Hadoop Distributed File System (2010)](https://pages.cs.wisc.edu/~akella/CS838/F15/838-CloudPapers/hdfs.pdf).
 
-This lab is inspired by [The Hadoop Distributed File System (2010)](https://pages.cs.wisc.edu/~akella/CS838/F15/838-CloudPapers/hdfs.pdf).
-
-# Table of contents
-
-- [Exercises](#exercises)
-    - [Seminar 1: HDFS, FastAPI and Docker](#seminar-1-hdfs-fastapi-and-docker)
-    - [Lab 1: Namenode](#lab-1-namenode)
-    - [Lab 2: Datanode](#lab-2-datanode)
-    - [Lab 3: Client](#lab-3-client)
-
-- [Design](#design)
-    - [client](#client)
-    - [namenode](#namenode)
-    - [datanode](#datanode)
 
 # Grade
 
-We have divided exercises into three categories:
-- (*) Mandatory: 80% of the project grade, the bare minimum to get it to work
-- (**) Recommended: 20% of the project grade
-- (***) Optional: addtional +2/10
+Requirements are divided into categories to help you prioritize.
 
-# Exercises
+| Weight               | Description                              | Symbol   |
+|----------------------|------------------------------------------|----------|
+| 40% | Essential, needed to get something working       | (^)      |
+| 30% | Nice-to-haves, not required to get something working | (^^)     |
+| 30% | Difficult, complex exercises             | (^^^)    |
+| +3/10 (extra) | Advanced, challenges for diving deep       | (^^^^)   |
 
-## Seminar 1: HDFS, FastAPI and Docker
+# Work breakdown
+
+## [1.1] FastAPI, Docker and Docker Compose
 
 During this lab, you will review HDFS and learn how to code APIs with FastAPI and deploy them with Docker.
 
+
+### [1.1.1] Starting a containerized service (^)
+
 Run [fastapi-quickstart](../../resources/fastapi-quickstart/) using `docker compose up`.
 
-This starts a Python API service and runs it inside a Docker container.
+- This starts a Python API service and runs it inside a Docker container.
+- The [main.py](../../resources/fastapi-quickstart/app/main.py) file implements 3 API endpoints.
+- The [compose.yaml](../../resources/fastapi-quickstart/compose.yaml) file describes how to build a Docker container with the API and which port to run it on. 
+- `ports: "8001:80"` means forward all traffic of port 8001 in this computer to port 80 inside the Docker container.
 
-The [main.py](../../resources/fastapi-quickstart/app/main.py) file implements 3 API endpoints.
-
-The [compose.yaml](../../resources/fastapi-quickstart/compose.yaml) file describes how to build a Docker image with the API and which port to run it on. `ports: "8001:80"` means forward all traffic of port 8001 in this computer to port 80 inside the Docker container.
-
-Try using `curl` to send an HTTP request to the server:
-
-```zsh
-curl "http://localhost:8001/info"
-```
+Use `curl` to send an HTTP request to the service and receive its response:
 
 ```zsh
-curl "http://localhost:8001/items/234?q=aloha"
+curl "http://localhost:8000/info"
 ```
 
+### [1.1.2] Implementing your first endpoint (^)
 
-### [S1Q0] [5 marks] Building your first API (*)
-
-Extend the service with two new endpoints: `POST /sum` and `POST /multiply/{a}/{b}`.
+Extend the service with a new endpoint: `POST /sum`.
 
 The sum endpoint must receive a [JSON object with two numbers in the body](https://fastapi.tiangolo.com/tutorial/body/) and return the sum.
 
@@ -74,12 +61,21 @@ Response:
 }
 ```
 
-Paste a screenshot where you test the POST request to your service using `curl`:
+When you have implemented it, rebuild and start the service with `docker compose up --build`.
+
+Finally, use `curl` to send the HTTP request to the service and receive its response:
 
 ```zsh
-curl -X POST "http://localhost:8000/sum" -H "Content-Type: application/json" -d '{"x":23, "y": 32}'
+curl -X POST "http://localhost:8000/sum" --json '{
+    "x":23, 
+    "y": 32
+}'
 ```
 
+
+### [1.1.3] Implementing your second endpoint (^)
+
+Extend the service with a new endpoint: `POST /multiply/{a}/{b}`.
 
 The multiply endpoint must receive a [JSON object with two numbers in the path](https://fastapi.tiangolo.com/tutorial/path-params/) and return the multiplication.
 
@@ -94,38 +90,93 @@ Response:
 }
 ```
 
-Paste a screenshot where you test the POST request to your service using `curl`:
+When you have implemented it, rebuild and start the service with `docker compose up --build`.
+
+Finally, use `curl` to send the HTTP request to the service and receive its response:
 
 ```zsh
 curl -X POST "http://localhost:8000/multiply/4/5"
 ```
 
+## [1.2] Namenode
 
-### [S1Q1] [20 marks] Diagram HDFS (*)
+During this lab session, you will build the `namenode` service as described in [namenode](#namenode). The `namenode` service has an API that allows creating files, adding blocks to files and reading the file metadata.
 
-Create 4 [sequence diagrams with Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html) showing:
-- Process to write a file to HDFS
-- Process to write a file to SSHDFS (without pipelines)
-- Process to read a file from HDFS
-- Process to fix underreplicated blocks in HDFS
+### [1.2.1] Listing datanodes (^)
 
-## Lab 1: Namenode
+Create a folder `namenode` with a FastAPI service and its Dockerfile. Create a Docker Compose file as well that brings up 1 `namenode` service in port 7001.
 
-During this lab session, you must build the `namenode` service as described in [namenode](#namenode). The `namenode` service should have an API that allows creating files, adding blocks to files and reading the file metadata.
-
-### [L1Q0] [10 marks] GET /datanodes (*)
-
-Create a basic FastAPI service in [projects\1-hdfs\namenode](./namenode/) with its Dockerfile. In the `settings.json` file, write a [JSON object with 3 data nodes](#namenode-filesystem). Make sure you can start the service with `docker compose up`.
-
-Then, implement the first endpoint of the `namenode` API: [GET /datanodes](#get-datanodes). Your code must [read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the configured `datanodes` from the `settings.json` file and return them.
-
-Test it works with curl and paste a screenshot.
-
-> [!TIP]
-> To paste the screenshot, save it to the [screeenshots](./screenshots/) folder and then [embed it into this markdown file](https://stackoverflow.com/a/52003495).
+Then, implement the first endpoint of the `namenode` API: [GET /datanodes](#get-datanodes). Your code must [read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the configured `datanodes` from the [settings.json](#namenode-filesystem) file file and return them.
 
 
-### [L1Q1] [10 marks] POST /files (*)
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+docker compose up --build
+```
+
+```zsh
+curl "http://localhost:7001/datanodes" -s | jq
+```
+
+**expected**
+```json
+{
+    "datanodes": [
+        {
+            "host": "localhost",
+            "port": 8001
+        },
+        {
+            "host": "localhost",
+            "port": 8002
+        },
+        {
+            "host": "localhost",
+            "port": 8003
+        }
+    ]
+}
+{
+    "datanodes": [
+        {
+            "host": "localhost",
+            "port": 8001
+        },
+        {
+            "host": "localhost",
+            "port": 8002
+        },
+        {
+            "host": "localhost",
+            "port": 8003
+        }
+    ]
+}
+{
+    "datanodes": [
+        {
+            "host": "localhost",
+            "port": 8001
+        },
+        {
+            "host": "localhost",
+            "port": 8002
+        },
+        {
+            "host": "localhost",
+            "port": 8003
+        }
+    ]
+}
+```
+
+</details>
+
+### [1.2.2] Creating files (^)
 
 Implement the [POST /files](#post-files) endpoint.
 
@@ -133,53 +184,222 @@ Implement the [POST /files](#post-files) endpoint.
 - Make sure you handle edge cases properly (empty file name, file name that already exists, ...)
 - [Write](https://python.land/data-processing/working-with-json#How_to_write_JSON_to_a_file_in_python) the [metadata of the new file to `checkpoint.json`](#namenode-filesystem).
 
-Test it works with curl and paste a screenshot.
 
-### [L1Q2] [10 marks] POST /files/{filename}/blocks (*)
+<details>
+<summary>Sanity check</summary>
 
-Implement the [POST /files/{filename}/blocks](#post-files-blocks) endpoint to allow appending a new block to a file.
+**test**
+```zsh
+curl -X POST "http://localhost:8001/files" --json '{
+    "file_name": "myfile.jpg"
+}' -s | jq
+```
 
-- [Read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the [number of replicas, `datanodes` and block size from `settings.json`](#namenode-filesystem).
-- Choose which `datanodes` will host replicas of the block
-- Update the [metadata of the file in `checkpoint.json`](#namenode-filesystem) to add the new block.
+**expected**
+```json
+{
+    "file_name": "myfile.jpg",
+    "block_size_bytes": 1000000,
+    "blocks": []
+}
+```
+</details>
 
-Test it works with curl and paste a screenshot.
 
-### [L1Q3] [10 marks] GET /files/{filename} (*)
+### [1.2.3] Retrieving files (^)
 
 Implement the [GET /files/{filename}](#get-filesfilename) endpoint. 
 
 - [Read the file name being requested from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/)
-- Read and return the file metadata from `checkpoint.json`.
-- Make sure you handle edge cases (file name that does not exist, ...).
+- Read and return the file metadata from the [checkpoint.json](#namenode-filesystem) file.
 
-Test it works with curl and paste a screenshot.
+Make sure you test it works with `curl`.
 
-### [L1Q4] [20 marks] The journal (**)
+### [1.2.4] Adding blocks to files (^)
 
-When the `namenode` starts, read the `checkpoint.json` file and replay the journal on top to store an in-memory image of the system. Then, store the new checkpoint file to the file system.
+Implement the [POST /files/{filename}/blocks](#post-filesfilenameblocks) endpoint to allow appending a new block to a file.
 
-Whenever a new file is created or a block is appended, apend the change to the journal file.
+- [Read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the [number of replicas, `datanodes` and block size from `settings.json`](#namenode-filesystem).
+- Choose which `datanodes` will host replicas of the block using the [basic placement policy](#block-and-replica-placement).
+- Update the [metadata of the file in `checkpoint.json`](#namenode-filesystem) to add the new block.
 
-### [L1Q5] [5 marks] Deleting files (***)
+Make sure you test it works with `curl`.
+
+### [1.2.5] Deleting files (^^)
 
 Implement the [DELETE /files/{filename}](#delete-filesfilename) endpoint. 
 
-### [L1Q6] [15 marks] Authentication (***)
+- [Read the file name being requested from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/)
+- Remove the file metadata from the [checkpoint.json](#namenode-filesystem) file.
 
-Right now, anyone that can open a TCP connection to your `namenode` service can create files, delete files, ... To prevent this:
-- Add a `/login` endpoint to your service that returns a signed [JWT](https://pyjwt.readthedocs.io/en/stable/) if the caller provides a username and password that is configured in `settings.json`. 
-- In all the other API endpoints, only accept requests that contain a valid JWT as a bearer token in the `Authorization` header.
+Make sure you test it works with `curl`.
 
-## Lab 2: Datanode
+### [1.2.6] The journal (^^^)
 
-During this lab session, you must build the `datanode` service as described in [datanode](#datanode). The `datanode` service should have an API that allows storing and reading blocks.
+The goal of this exercise is to avoid writing and reading the full `checkpoint.json` file for every change (e.g. new file or block). Instead, implement a write-ahead-log (the journal) for every change.
 
-### [L2Q0] [10 marks] PUT /files/{filename}/blocks/{block_number} (*)
+- When the `namenode` starts:
+    - Create an empty `journal.log` file if it not exists.
+    - Go through every line in the journal file and load it into the in-memory image (a dictionary).
+- Whenever a file is created, a block is added or a file is removed:
+    - Append it to the journal first
+    - Then update the in-memory image
+    
+This is an example of a journal and the image you can build after reading it:
 
-Start by creating a basic FastAPI service in [projects\1-hdfs\datanode](./datanode/) with is Dockerfile and add it to the `compose.yaml` file at port 8001.
+```
+create-file {"file_name": "myfile.jpg","block_size_bytes": 1000000}
+create-block { "file_name": "myfile.jpg", "number": 0, "replicas": [ "1", "2" ] }
+create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
+create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
+create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
+create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
+```
 
-Implement the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_number) endpoint. When a new block is PUT, you must [read the file name and block number from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/). Then, the `datanode` must [store it in its file system](#datanode-filesystem) at the path `datanode/storage/<filename>/<block_number>`.
+```json
+{
+    "cat.jpg": {
+        "file_name": "cat.jpg",
+        "block_size_bytes": 1000000,
+        "blocks": [
+            {
+                "number": 0,
+                "replicas": [ "1", "2" ]
+            },
+            {
+                "number": 1,
+                "replicas": [ "2", "3" ]
+            },
+            {
+                "number": 2,
+                "replicas": [ "3", "1" ]
+            }
+        ]
+    },
+    "somefile.txt": {
+        "file_name": "somefile.txt",
+        "block_size_bytes": 1000000,
+        "blocks": [
+            {
+                "number": 0,
+                "replicas": [ "1", "2" ]
+            }
+        ]
+    }
+}
+```
+
+
+### [1.2.7] Journal checkpoints (^^^)
+
+Reading the full `journal.log` every time the `namenode` starts can be very slow if the journal log is very large. The goal is creating checkpoints summarizing all changes up to a given point in time.
+
+Modify your implementation, such that when the `namenode` starts:
+- Create an empty `checkpoint.json` file if it not exists.
+- Load the `checkpoint.json` data into the in-memory image (dictionary)
+- Then read the `journal.log` and apply changes to the in-memory image
+- Before continuing, store the final image in `checkpoint.json` and empty the `journal.log` file. This way, the next time all the changes in the journal have already been processed and consolidated into the checkpoint.
+
+ 
+This is an example of a checkpoint, the journal and the image you can build after reading both:
+
+```json
+{
+    "cat.jpg": {
+        "file_name": "cat.jpg",
+        "block_size_bytes": 1000000,
+        "blocks": [
+            {
+                "number": 0,
+                "replicas": [ "1", "2" ]
+            }
+        ]
+    }
+}
+```
+
+```
+create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
+create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
+create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
+create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
+```
+
+```json
+{
+    "cat.jpg": {
+        "file_name": "cat.jpg",
+        "block_size_bytes": 1000000,
+        "blocks": [
+            {
+                "number": 0,
+                "replicas": [ "1", "2" ]
+            },
+            {
+                "number": 1,
+                "replicas": [ "2", "3" ]
+            },
+            {
+                "number": 2,
+                "replicas": [ "3", "1" ]
+            }
+        ]
+    },
+    "somefile.txt": {
+        "file_name": "somefile.txt",
+        "block_size_bytes": 1000000,
+        "blocks": [
+            {
+                "number": 0,
+                "replicas": [ "1", "2" ]
+            }
+        ]
+    }
+}
+```
+
+
+### [1.2.8] Periodic checkpoints (^^^^)
+
+Instead of creating checkpoints only when the `namenode` starts, create a checkpoint periodically. For example, every 30 seconds:
+- Read the checkpoint and the journal
+- Create an in-memory image by applying the journal on top of the checkpoint
+- Store the new checkpoint
+- Truncate the journal
+
+To do so continuously in the background, you may use code like this:
+
+```python
+async def background_loop():
+    while True:
+        logging.info("Here!")
+        await asyncio.sleep(1)
+
+@app.on_event("startup")
+async def schedule_periodic():
+    loop = asyncio.get_event_loop()
+    loop.create_task(background_loop())
+```
+
+### [1.2.9] Backup namenode (^^^^)
+
+Right now, if the `namenode` fails, our SSHDFS system is down. In Docker Compose, create a new replica of the `namenode` that acts as a Backup Node in port 7002.
+
+Implement the necessary API so the `namenode` can stream the journal changes to the `backupnode`, and the `backupnode` can mantain an up-to-date image.
+
+## [1.3] Datanode
+
+During this lab session, you will build the `datanode` service as described in [datanode](#datanode). The `datanode` service has an API that allows storing and reading blocks.
+
+
+### [1.3.1] Writing blocks (^)
+
+Create a `datanode` fodler with a new FastAPI service and its Dockerfile. Then, add three replicas of the `datanode` service in the Docker Compose file.
+
+Implement the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_number) endpoint. 
+
+- When a new block is PUT, you must [read the file name and block number from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/). 
+- Then, the `datanode` must [store it in its file system](#datanode-filesystem) at the path `datanode/storage/<filename>/<block_number>`.
 
 > [!TIP]
 > You can [use the `UploadFile` object to receive files](https://fastapi.tiangolo.com/tutorial/request-files/#define-file-parameters).
@@ -187,124 +407,124 @@ Implement the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenamebl
 > [!TIP]
 > You can use the [`open` and `write`](https://www.geeksforgeeks.org/python-write-bytes-to-file/) functions to write bytes to a new file. 
 
-Test you can upload some of the test blocks: `curl -F "file=@./test_files/test-block-text" -X PUT localhost:8001/files/test-file.txt/blocks/0`.
+Test you can upload some of the test blocks: `curl -F "file=@./test_files/test-block-text" -X PUT localhost:8001/files/test-file.txt/blocks/0`. Finally, open the `Files` tab in `Docker Desktop` and verify the block is successfully stored there.
 
-Paste a screenshot of putting a block to the datanode with curl and how it is stored in the filesystem inside the container (using the `Files` tab in `Docker Desktop`).
+### [1.3.2] Reading blocks (^)
 
-### [L2Q1] [10 marks] GET /files/{filename}/blocks/{block_number} (*)
+Implement the [GET /files/{filename}/blocks/{block_number}](#get-filesfilenameblocksblock_number) endpoint. 
 
-Implement the [GET /files/{filename}/blocks/{block_number}](#get-filesfilenameblocksblock_number) endpoint. Read the file name and block number [from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/). When a block is GET, the `datanode` must read it from [its file system](#datanode-filesystem) at the path `datanode/storage/<filename>/<block_number>`. 
+- Read the file name and block number [from the URL path](https://fastapi.tiangolo.com/tutorial/path-params/). 
+- When a block is GET, the `datanode` must read it from [its file system](#datanode-filesystem) at the path `datanode/storage/<filename>/<block_number>`. 
     
 > [!TIP]
 > You can [use the `FileResponse` object to return files](https://fastapi.tiangolo.com/advanced/custom-response/#fileresponse).
 
 Test you can download the test block we uploaded before with curl: `curl -o downloaded-test-block.txt -X GET localhost:8001/files/test-file.txt/blocks/0`.
 
-Paste a screenshot and verify the downloaded block is fine.
+### [1.3.3] Write pipelines (^^^)
 
-### [L2Q2] [5 marks] Deploying the datanode with docker compose (*)
+Extend the `PUT /files/{filename}/blocks/{block_number}` endpoint to allow sending the next `datanode` ids in the write pipeline as a query parameter.
 
-Modify the `compose.yaml` file to also create 3 `datanodes` services at ports 8081, 8082 and 8083.
+For example:
+- Datanode 1 receives a block in (i.e. you send `PUT http://localhost:8001/files/cat.jpg/blocks/0?pipeline=2,3`)
+- Datanode 1 stores the block in its file system.
+- Datanode 1 sends the block to the next datanode in the pipeline: `PUT http://localhost:8002/files/cat.jpg/blocks/0?pipeline=3` 
+- Datanode 2 stores the block in its file system.
+- Datanode 2 sends the block to the next datanode in the pipeline: `PUT http://localhost:8002/files/cat.jpg/blocks/0?pipeline=3` 
+- Datanode 3 stores the block in its file system.
 
-### [L2Q3] [10 marks] Write pipelines (**)
+> [!TIP]
+> You can additional function arguments to read [query parameters](https://fastapi.tiangolo.com/tutorial/query-params/).
 
-Extend the `PUT /files/{filename}/blocks/{block_number}` endpoint to allow sending the next `datanodes` in the write pipeline as a [query parameter](https://fastapi.tiangolo.com/tutorial/query-params/).
+> [!TIP]
+> You can use [httpx](https://www.python-httpx.org/quickstart/) to make HTTP requests with Python.
 
-For example, when a `datanode` running at port 8001 receives `PUT http://localhost:8001/files/cat.jpg/blocks/0?pipeline=localhost:8002,localhost:8003`:
-- It stores the block in its file system.
-- It sends the `PUT http://localhost:8002/files/cat.jpg/blocks/0?pipeline=localhost:8003` with the block to the next datanode in the pipeline.
-- Then, the `datanode` at port 8002 stores the block and sends the block to the last `datanode`: `PUT http://localhost:8003/files/cat.jpg/blocks/0`.
+### [1.3.4] Handling deleted files (^^^)
 
-### [L2Q4] [5 marks] Authentication (***)
-
-Right now, anyone that can open a TCP connection to your `datanode` service can upload and download files, ... Finish the exercise by:
-- Only accept requests that contain a valid JWT from the `namenode` as a bearer token in the `Authorization` header.
-
-### [L2Q5] [15 marks] Deleting files (***)
-
-Use [Repeated Tasks](https://rocketry.readthedocs.io/en/stable/cookbook/fastapi.html) to report the blocks that each `datanode` has every 30 seconds to the `namenode`:
+Send a block report from each `datanode` to the `namenode` every 30 seconds:
 - Add an endpoint in the API of the `namenode` to receive the block reports.
 - The `namenode` must answer the request with any blocks which should be removed
 - The `datanode` should then remove all blocks that have been indicated for removal by the `namenode`.
 
-### [L2Q6] [30 marks] Handling underreplicated blocks (***)
+To do so continuously in the background, you may use code like this:
 
-Use [rocketry](https://rocketry.readthedocs.io/en/stable/cookbook/fastapi.html) to scan all blocks each `datanode` has every 30 seconds:
-- Add an endpoint in the API of the `namenode` to report corrupted blocks.
-- When the `datanode` finds a corrupted block (checksum does not match), notify the `namenode` using its API.
-- The `namenode` must then add these blocks to the replication queue
-- The `namenode` must answer the block reports with any blocks in the replication queue which should be copied to other datanodes
-- The `datanode` should then send these blocks to the indicated `datanode`.
+```python
+async def background_loop():
+    while True:
+        logging.info("Here!")
+        await asyncio.sleep(1)
 
-## Lab 3: Client
+@app.on_event("startup")
+async def schedule_periodic():
+    loop = asyncio.get_event_loop()
+    loop.create_task(background_loop())
+```
 
-During this seminar, you must build the [Python client](#client) which allows uploading and download files as blocks from SSHDFS. When uploading a file, the client is in charge of dividing the file into blocks and uploading each of them. When downloading a file, the client is in charge of appending all the downloaded blocks together in the final file.
+### [1.3.5] Handling underreplicated blocks (^^^^)
 
-### [L3Q0] [5 marks] List datanodes (*)
+When you receive a block report from a `datanode`, extend the `namenode` implementation to:
+- Keep track of which blocks are stored in each `datanode` in a dictionary
+- If a block that was stored in a `datanode` is no longer stored there in a following block report, check if the block has enough replicas
+- If it is underreplicated, add it to a replication queue
+- Answer the next block report from a `datanode` by instructing them to send a copy of undereplicated blocks they own to another `datanode` 
 
-Create a new Python script `projects\1-hdfs\client\list_datanodes.py` that retrieves all the `datanodes` from the `namenode` and prints their host and port:
-- Retrieve the host and port of each `datanode` [using the `namenode` API](#get-datanodes). 
-- Then, print each of them in a line.
+## [1.4] Client
+
+You will build a [Python client](#client) which allows uploading and download files as blocks from SSHDFS. When uploading a file, the client is in charge of dividing the file into blocks and uploading each of them. When downloading a file, the client is in charge of appending all the downloaded blocks together in the final file.
+
+### [1.4.1] List datanodes (^)
+
+Create a folder `client` with a Python script: `list_datanodes.py` and a `requirements.txt` file with any librarie it needs to run. 
+
+`list_datanodes.py` must retrieve all the `datanodes` from the `namenode` and prints their host and port:
+- Retrieve the id, host and port of each `datanode` [using the `namenode` API](#get-datanodes). 
+- Then, print each of them in a line using this format: `<id>@<host>:<port>`
+
+For example:
+```
+1@localhost:8001
+2@localhost:8002
+3@localhost:8003
+```
 
 > [!TIP]
-> The equivalent of `curl` in Python is the `requests` module. To make a GET request in Python, [use the `requests.get` function](https://stackoverflow.com/a/17517598).
+> You can use [httpx](https://www.python-httpx.org/quickstart/) to make HTTP requests with Python. See `JSON Response Content`.
 
-Run the `list_datanodes.py` script and paste a screenshot of the result.
+### [1.4.2] Upload a file (^)
 
-### [L3Q1] [10 marks] Upload a file (*)
-
-Create a new Python script `projects\1-hdfs\client\upload.py <source_path> <sshdfs_file_name>` that creates a new file in the `namenode`, creates the necessary blocks according to the block size, and uploads each block (and each replica) to the `datanodes` that the `namenode` assigned:
+Create a new Python script `upload.py <source_path> <sshdfs_file_name>`. It creates a new file in the `namenode`, creates the necessary blocks according to the block size, and uploads each block to the first `datanode` that the `namenode` assigned:
 
 - Use [sys.argv](https://www.geeksforgeeks.org/how-to-use-sys-argv-in-python/) to read the source path and filename parameters.
 - [Check the file size](https://stackoverflow.com/questions/2104080/how-do-i-check-file-size-in-python)
 - Create the file using the [POST /files](#post-files) endpoint in the `namenode` API.
+- Read [the bytes of the file](https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte). For each block:
+    - Read `block_size_bytes` from the file
+    - Add a new block to the file using the [POST /files/{filename}/blocks](#post-filesfilenameblocks) endpoint in the `namenode` API. 
+    - Upload the block the the first `namenode` using the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_number). If you have implemented write pipelines, remember to send the proper `pipeline` query parameter for them to work.
 
 > [!TIP]
-> The equivalent of `curl` in Python is the `requests` module. To make a POST request in Python, [use the `requests.post` function](https://stackoverflow.com/a/26344315). 
+> You can use the [files parameter](https://www.slingacademy.com/article/python-how-to-upload-files-with-httpx-form-data/) to upload bytes with HTTPX.
 
-- Read [the bytes of the file](https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte) block by block using the `block_size` in the `namenode` response. 
-- Create each block using the `namenode` API.
-- Finally, PUT each block and each replica to the assigned `datanode`.
+Run the `upload.py` script and make sure it works (i.e. if you open the `Files` tab in Docker Desktop you can see all the blocks properly uploaded).
 
-> [!TIP]
-> In Python, you can use the `requests.put` with the `files` parameter to upload some binary content.
->
->```python
->import requests
->requests.put(url, files={
->    'file': block_as_bytes
->})
->```  
+### [1.4.3] Download a file (^)
 
-Run the `upload.py` script and paste a screenshot of the result and how the blocks are stored in the different `datanodes` (inside Docker).
-
-### [L3Q2] [10 marks] Download a file (*)
-
-Create a new Python script `projects\1-hdfs\client\download.py <hdfs_file_name> <destination_path>` that downloads all the blocks from the `datanodes` and writes them all together to the destination path as the complete file:
+Create a new Python script `download.py <hdfs_file_name> <destination_path>` that downloads all the blocks from the `datanodes` and writes them all together to the destination path as the complete file:
 - First, retrieve the file metadata using the [GET /files/{filename}](#get-filesfilename) endpoint of the `namenode` API. 
 - Then, use the [GET /files/{filename}/blocks/{block}](#get-filesfilenameblocksblock_numbercontent) endpoint of the `datanode` API to download each block from one of the replicas.
 - Finally, [write all blocks as one final file](https://www.geeksforgeeks.org/python-write-bytes-to-file/).
 - Make sure you gracefully handle replica failures.
 
 > [!TIP]
-> In Python, you can use the `requests.get` with the `content` method to download some binary content.
->
->```python
->import requests
->block_as_bytes = requests.get(url).content
->```  
+> See `Binary Response Content` in the [httpx](https://www.python-httpx.org/quickstart) docs.  
 
-Run the `upload.py` and `download.py` scripts. Paste a screenshot of how you can upload and download files.
+Run the `upload.py` and `download.py` scripts and make sure you can upload and download a full file successfully.
 
-### [L3Q3] [5 marks] Build a unified client with click (**)
+### [1.4.4] Client failover (^^)
 
-Use the [click](https://click.palletsprojects.com/en/8.1.x/) library to create a unified client with different commands for: `upload`, `download` and `datanodes`.
-
+If a `datanode` fails when uploading or downloading a file, use any of the other `datanodes` in the replica list.
 
 # Design
-
-> [!NOTE]
-> This section outlines the requirements and design decisions of the SSHDFS architecture. You must implement a system that matches this design using Python.
 
 SSHDFS is composed of 2 services and 1 client:
 - The [**client**](#client) allows the user to upload and download files from SSHDFS.
@@ -328,8 +548,6 @@ In SSHDFS, files are divided into blocks before being stored. A block is a chunk
 #### Uploading files
 
 To upload a file, the client first creates the file in the `namenode`. Then, it divides the file into blocks. Then, it creates each block using the `namenode` API and sends each block to the corresponding `datanode`. 
-
-If the `namenode` is configured with a `replication_factor` higher than 1, then the client sends each block to the corresponding `datanode`. You can also implement write pipelines (**).
 
 #### Downloading files
 
@@ -355,20 +573,23 @@ The `namenode` reads the `settings.json` file to get the system configuration, i
 {
     "datanodes": [
         {
+            "id": "1",
             "host": "localhost",
             "port": 8001
         },
         {
+            "id": "2",
             "host": "localhost",
             "port": 8002
         },
         {
+            "id": "3",
             "host": "localhost",
             "port": 8003
         }
     ],
-    "replication_factor": 2,
-    "block_size": 1000000
+    "replication_factor": 1,
+    "block_size_bytes": 1000000
 }
 ```
 
@@ -379,53 +600,29 @@ The `namenode` writes to the `checkpoint.json` file every file that is created i
 {
     "cat.jpg": {
         "file_name": "cat.jpg",
-        "size": 295,
+        "block_size_bytes": 1000000,
         "blocks": [
             {
                 "number": 0,
-                "size": 100,
-                "replicas": [
-                    {
-                        "host": "localhost",
-                        "port": 8001
-                    }
-                ]
+                "replicas": [ "1", "2" ]
             },
             {
                 "number": 1,
-                "size": 100,
-                "replicas": [
-                    {
-                        "host": "localhost",
-                        "port": 8002
-                    }
-                ]
+                "replicas": [ "2", "3" ]
             },
             {
                 "number": 2,
-                "size": 95,
-                "replicas": [
-                    {
-                        "host": "localhost",
-                        "port": 8003
-                    }
-                ]
+                "replicas": [ "3", "1" ]
             }
         ]
     },
     "somefile.txt": {
         "file_name": "somefile.txt",
-        "size": 95,
+        "block_size_bytes": 1000000,
         "blocks": [
             {
                 "number": 0,
-                "size": 95,
-                "replicas": [
-                    {
-                        "host": "localhost",
-                        "port": 8001
-                    }
-                ]
+                "replicas": [ "1", "2" ]
             }
         ]
     }
@@ -438,10 +635,10 @@ If the `replication_factor` of the system is higher than one, the `replicas` arr
 
 The client can retrieve all `datanodes` configured in SSHDFS using the `datanodes` endpoint.
 
-For example, the `client` can retrieve all `datanodes` configured in the `namenode` with address `localhost:8080` as follows:
+For example, the `client` can retrieve all `datanodes` configured in the `namenode` with address `localhost:7001` as follows:
 
 ```
-GET http://localhost:8080/datanodes
+GET http://localhost:7001/datanodes
 ```
 
 Response:
@@ -466,12 +663,12 @@ Response:
 
 #### POST /files
 
-POSTing to `/files` creates a new file in the `namenode`.
+POSTing to `/files` creates a new file in the `namenode`. Use the `block_size_bytes` configured in `settings.json`.
 
-For example, the `client` can create a file called `myfile.jpg` in the `namenode` with address `localhost:8080`as follows:
+For example, the `client` can create a file called `myfile.jpg` in the `namenode` with address `localhost:7001`as follows:
 
 ```
-POST http://localhost:8080/files
+POST http://localhost:7001/files
 ```
 
 Body:
@@ -485,7 +682,7 @@ Response:
 ```json
 {
     "file_name": "myfile.jpg",
-    "block_size": 100,
+    "block_size_bytes": 1000000,
     "blocks": []
 }
 ```
@@ -496,10 +693,10 @@ If the file already exists in the `namenode`, the response must be a 409.
 
 POSTing to `/files/{filename}/blocks` adds a block to an existing file.
 
-For example, the `client` can add a block to the file `myfile.jpg` in the `namenode` with address `localhost:8080` as follows:
+For example, the `client` can add a block to the file `myfile.jpg` in the `namenode` with address `localhost:7001` as follows:
 
 ```
-POST http://localhost:8080/files/myfile.jpg/blocks
+POST http://localhost:7001/files/myfile.jpg/blocks
 ```
 
 Body:
@@ -512,20 +709,11 @@ Response:
 ```json
 {
     "file_name": "myfile.jpg",
-    "block_size": 100,
+    "block_size_bytes": 1000000,
     "blocks": [
         {
             "number": 0,
-            "replicas": [
-                {
-                    "host": "localhost",
-                    "port": 8001
-                },
-                {
-                    "host": "localhost",
-                    "port": 8002
-                }
-            ]
+            "replicas": [ "1", "2" ]
         }
     ]
 }
@@ -562,44 +750,29 @@ For example, consider a system with 3 `datanodes`, `block_size=100` and `replica
 
 GETting `/files/{filename}` retrieves the file metadata from the `namenode`. 
 
-For example, the `client` can retrieve all the information about a file called `myfile.jpg` from the `namenode` with address `localhost:8080` as follows:
+For example, the `client` can retrieve all the information about a file called `myfile.jpg` from the `namenode` with address `localhost:7001` as follows:
 
 ```
-GET http://localhost:8080/files/myfile.jpg
+GET http://localhost:7001/files/myfile.jpg
 ```
 
 Response:
 ```json
 {
     "file_name": "myfile.jpg",
-    "block_size": 100,
+    "block_size_bytes": 1000000,
     "blocks": [
         {
             "number": 0,
-            "replicas": [
-                {
-                    "host": "localhost",
-                    "port": 8001
-                }
-            ]
+            "replicas": [ "1" ]
         },
         {
             "number": 1,
-            "replicas": [
-                {
-                    "host": "localhost",
-                    "port": 8002
-                }
-            ]
+            "replicas": [ "2" ]
         },
         {
             "number": 2,
-            "replicas": [
-                {
-                    "host": "localhost",
-                    "port": 8002
-                }
-            ]
+            "replicas": [ "3" ]
         }
     ]
 }
@@ -611,10 +784,10 @@ If the file does not exist in the `namenode`, the response must be a 404.
 
 DELETEing `/files/{filename}` removes the file from the `namenode`. 
 
-For example, the `client` can delete a file called `myfile.jpg` from the `namenode` with address `localhost:8080` as follows:
+For example, the `client` can delete a file called `myfile.jpg` from the `namenode` with address `localhost:7001` as follows:
 
 ```
-DELETE http://localhost:8080/files/myfile.jpg
+DELETE http://localhost:7001/files/myfile.jpg
 ```
 
 Response: 204

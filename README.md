@@ -1,28 +1,26 @@
 # Large Scale Distributed Systems (LSDS)
 
-To get started, follow the [Developer setup](./DEVELOPER_SETUP.md).
+Follow the [Developer setup](./DEVELOPER_SETUP.md) to get started.
 
 # Projects
 
+During the course you must deliver these 3 projects:
 - [HDFS project](./projects/1-hdfs/README.md)
-
 - [MapReduce project](./projects/2-mapreduce/README.md)
-
 - [Kafka project](./projects/3-kafka/README.md)
 
-# Guidelines
+# Coding guidelines
 
 - Use git commits and pushes (copying and pasting code through the GitHub web UI is not allowed). [Help](https://www.youtube.com/watch?v=i_23KUAEtUM)
 - Use informative commit messages. [Help](https://www.conventionalcommits.org/en/v1.0.0/#commit-message-with-description-and-breaking-change-footer)
 - Follow [PEP8](https://peps.python.org/pep-0008/)
 - Format your code with [black](https://black.readthedocs.io/en/stable/getting_started.html)
 - Don't add unnecessary comments to your code, we know how to read code!
-- To deliver the projects, submit a link to the repository in the Aula Global task and answer the form linked there.
 
 > [!TIP]
 > In code projects, adhering to coding standards and using formatters like black allows all contributors to produce more cohesive code.
 
-# Plagiarism Warning
+# Plagiarism
 
 Submitting a labs/seminars project which contains code you have not authored is considered plagiarism.
 
@@ -36,20 +34,9 @@ Submitting a labs/seminars project which contains code you have not authored is 
 
 In case copying is suspected, the School Direction will be informed as per [the protocol](https://www.upf.edu/web/usquid-etic/plag-doc-teachers). These offenses are [sanctioned](https://seuelectronica.upf.edu/regim-disciplinari-dels-estudiants-de-la-universitat-pompeu-fabra) with temporary expulsion from the University, loss of the right to be assessed in all or part of the courses, and/or others.
 
-# Group
-
-> [!TIP]
-> Fill in this section in your copy of this repository.
-
-Group number: `todo`
-
-## Members
-- Member 1 email: `todo`
-- Member 2 email: `todo`
-- Member 3 email: `todo`
-
 # Additional resources
 
+We include ready-to-use templates for every system you study in the course:
 - [How to run FastAPI locally with Docker](./resources/fastapi-quickstart/README.md)
 - [How to run HDFS locally with Docker](./resources/hdfs-quickstart/README.md)
 - [How to run Kafka locally with Docker and use the Kafka client](./resources/kafka-quickstart/README.md)
