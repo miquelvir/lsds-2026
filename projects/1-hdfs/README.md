@@ -28,7 +28,7 @@ Run [fastapi-quickstart](../../resources/fastapi-quickstart/) using `docker comp
 - This starts a Python API service and runs it inside a Docker container.
 - The [main.py](../../resources/fastapi-quickstart/app/main.py) file implements 3 API endpoints.
 - The [compose.yaml](../../resources/fastapi-quickstart/compose.yaml) file describes how to build a Docker container with the API and which port to run it on. 
-- `ports: "8001:80"` means forward all traffic of port 8001 in this computer to port 80 inside the Docker container.
+- `ports: "8000:80"` means forward all traffic of port 8000 in this computer to port 80 inside the Docker container.
 
 Use `curl` to send an HTTP request to the service and receive its response:
 
