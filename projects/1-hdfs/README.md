@@ -100,7 +100,7 @@ curl -X POST "http://localhost:8000/multiply/4/5"
 
 ## [1.2] Namenode
 
-During this lab session, you will build the `namenode` service as described in [namenode](#namenode). The `namenode` service has an API that allows creating files, adding blocks to files and reading the file metadata.
+You will build the `namenode` service as described in [namenode](#namenode). The `namenode` service has an API that allows creating files, adding blocks to files and reading the file metadata.
 
 ### [1.2.1] Listing datanodes (^)
 
@@ -290,7 +290,7 @@ create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" 
 ```
 
 
-### [1.2.7] Journal checkpoints (^^^)
+### [1.2.7] Journal checkpoints (^^^^)
 
 Reading the full `journal.log` every time the `namenode` starts can be very slow if the journal log is very large. The goal is creating checkpoints summarizing all changes up to a given point in time.
 
@@ -389,7 +389,7 @@ Implement the necessary API so the `namenode` can stream the journal changes to 
 
 ## [1.3] Datanode
 
-During this lab session, you will build the `datanode` service as described in [datanode](#datanode). The `datanode` service has an API that allows storing and reading blocks.
+You will build the `datanode` service as described in [datanode](#datanode). The `datanode` service has an API that allows storing and reading blocks.
 
 
 ### [1.3.1] Writing blocks (^)
