@@ -290,7 +290,7 @@ create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" 
 ```
 
 
-### [1.2.7] Journal checkpoints (^^^^)
+### [1.2.7] Journal checkpoints (^^^)
 
 Reading the full `journal.log` every time the `namenode` starts can be very slow if the journal log is very large. The goal is creating checkpoints summarizing all changes up to a given point in time.
 
@@ -359,15 +359,21 @@ create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" 
 ```
 
 
-### [1.2.8] Periodic checkpoints (^^^^)
+### [1.2.8] Backupnode (^^^^)
 
-Instead of creating checkpoints only when the `namenode` starts, create a checkpoint periodically. For example, every 30 seconds:
-- Read the checkpoint and the journal
-- Create an in-memory image by applying the journal on top of the checkpoint
-- Store the new checkpoint
-- Truncate the journal
+Right now, if the `namenode` fails, our SSHDFS system is down. In Docker Compose, create a new replica of the `namenode` that acts as a Backup Node in port 7002.
 
-To do so continuously in the background, you may use code like this:
+Implement the necessary API so the `namenode` can stream the journal changes to the `backupnode`, and the `backupnode` can mantain an up-to-date image.
+
+Test that if you create a file and some blocks in the main `namenode`, if you use the `backupnode` API you can still GET the new file.
+
+### [1.2.9] Backupnode periodic checkpoints (^^^^)
+
+Every 120 seconds, the `backupnode` should store his image as a new checkpoint and send it to the `namenode`. The namenode should then store the new checkpoint and truncate the journal.
+
+Implement the necessary API so the `namenode` can receive the new checkpoint and truncate the journal.
+
+To run code periodically, you may use code like this:
 
 ```python
 async def background_loop():
@@ -381,11 +387,6 @@ async def schedule_periodic():
     loop.create_task(background_loop())
 ```
 
-### [1.2.9] Backup namenode (^^^^)
-
-Right now, if the `namenode` fails, our SSHDFS system is down. In Docker Compose, create a new replica of the `namenode` that acts as a Backup Node in port 7002.
-
-Implement the necessary API so the `namenode` can stream the journal changes to the `backupnode`, and the `backupnode` can mantain an up-to-date image.
 
 ## [1.3] Datanode
 
@@ -439,7 +440,7 @@ For example:
 > [!TIP]
 > You can use [httpx](https://www.python-httpx.org/quickstart/) to make HTTP requests with Python.
 
-### [1.3.4] Handling deleted files (^^^)
+### [1.3.4] Handling deleted files (^^^^)
 
 Send a block report from each `datanode` to the `namenode` every 30 seconds:
 - Add an endpoint in the API of the `namenode` to receive the block reports.
@@ -467,6 +468,12 @@ When you receive a block report from a `datanode`, extend the `namenode` impleme
 - If a block that was stored in a `datanode` is no longer stored there in a following block report, check if the block has enough replicas
 - If it is underreplicated, add it to a replication queue
 - Answer the next block report from a `datanode` by instructing them to send a copy of undereplicated blocks they own to another `datanode` 
+
+
+### [1.3.6] Handling down datanodes (^^^^)
+
+Keep track of the last time a `datanode` has sent a block report. If none has been received in the last 90 seconds, treat all the block replicas in that `datanode` as missing and add them to the replication queue.
+
 
 ## [1.4] Client
 
@@ -720,6 +727,57 @@ Response:
 ```
 
 If the file does not exist in the `namenode`, the response must be a 404.
+
+
+#### POST /block_report
+
+POSTing to `/block_report` is used by each `datanode` to send block reports to the `namenode`. The body of the request contains all the blocks stored in the datanode. The body of the response contains all blocks the `namenode` has decided this `datanode` should remove (because they are overreplicated or the fila has been removed) or send to another `datanode` (because they are underreplicated).
+
+For example:
+
+```
+POST http://localhost:7001/block_report
+```
+
+Body:
+```json
+{
+    "blocks": [
+        {
+            "file_name": "myfile.jpg",
+            "block_number": 0
+        },
+        {
+            "file_name": "myfile.jpg",
+            "block_number": 1
+        },
+        {
+            "file_name": "another-file.txt",
+            "block_number": 1
+        }
+    ]
+}
+```
+
+Response:
+```json
+{
+    "blocks_to_replicate": [
+        {
+            "file_name": "another-file.txt",
+            "block_number": 1,
+            "destination_datanode_id": "2"
+        }
+    ],
+    "blocks_to_remove": [
+        {
+            "file_name": "myfile.jpg",
+            "block_number": 1
+        }
+    ]
+}
+```
+
 
 ##### block and replica placement
 
