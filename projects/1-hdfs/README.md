@@ -21,7 +21,7 @@ Requirements are divided into categories to help you prioritize.
 During this lab, you will review HDFS and learn how to code APIs with FastAPI and deploy them with Docker.
 
 
-### [1.1.1] Starting a containerized service (^)
+### [1.1.1] Starting a containerized service
 
 Run [fastapi-quickstart](../../resources/fastapi-quickstart/) using `docker compose up`.
 
@@ -36,7 +36,7 @@ Use `curl` to send an HTTP request to the service and receive its response:
 curl "http://localhost:8000/info"
 ```
 
-### [1.1.2] Implementing your first endpoint (^)
+### [1.1.2] Implementing your first endpoint
 
 Extend the service with a new endpoint: `POST /sum`.
 
@@ -73,7 +73,7 @@ curl -X POST "http://localhost:8000/sum" --json '{
 ```
 
 
-### [1.1.3] Implementing your second endpoint (^)
+### [1.1.3] Implementing your second endpoint
 
 Extend the service with a new endpoint: `POST /multiply/{a}/{b}`.
 
