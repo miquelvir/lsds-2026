@@ -340,10 +340,10 @@ This is an example of a checkpoint, the journal and the image you can build afte
 ```
 
 ```
-create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
-create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
-create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
-create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
+2 create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
+3 create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
+4 create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
+5 create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
 ```
 
 ```json
