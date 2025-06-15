@@ -904,7 +904,7 @@ PUTting a block to `/files/{filename}/blocks/{block_number}` uploads it to the `
 
 For example, to upload the block `0` of a file named `myfile.jpg` in the `datanode` with address `localhost:8081`, the `client` must send a request with the block [attached as a file](https://api4.ai/blog/how-to-post-a-file-via-http-request) to `PUT http://localhost:8081/files/myfile.jpg/blocks/0`.
 
-You can implement write pipelines (**) by allowing an additional query parameter: `/files/{filename}/blocks/{block_number}?pipeline=localhost:8002,localhost:8003` which specifies which `datanodes` should this block be forwarded to.
+You can implement write pipelines (^^^) by allowing an additional query parameter: `/files/{filename}/blocks/{block_number}?pipeline=2,3` which specifies which `datanodes` should this block be forwarded to.
 
 #### GET /files/{filename}/blocks/{block_number}
 
