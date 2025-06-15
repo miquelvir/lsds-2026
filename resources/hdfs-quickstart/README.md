@@ -92,11 +92,11 @@ hdfs fsck /
 
 Open [http://localhost:9870/explorer.html#/](http://localhost:9870/explorer.html#/) in a browser.
 
-### Where are snapshots and the journal?
+### Where are checkpoints and the journal?
 
 In the name node:
 - `/tmp/hadoop-hadoop/dfs/name/current/edits_inprogress_****************` is the journal
-- `/tmp/hadoop-hadoop/dfs/name/current/fsimage_****************` is the snapshot
+- `/tmp/hadoop-hadoop/dfs/name/current/fsimage_****************` is the checkpoint
 
 ### How to view the Journal (WAL) in a human-readable format?
 
