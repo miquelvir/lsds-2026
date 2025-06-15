@@ -751,6 +751,31 @@ Response:
 If the file does not exist in the `namenode`, the response must be a 404.
 
 
+##### block and replica placement
+
+In SSHDFS, we will use a very simple block and replica placement strategy.
+
+The first block of a file will always be stored in datanode 1. Then, all the following blocks will be assigned using the modulo operator: `datanode_index = (block_number % total_datanodes)`.
+
+For example, consider a system with 3 `datanodes`, `block_size=100` and `replication_factor=1`. Then, if a client wants to store a file that weights 495 bytes:
+- File is divided in 5 blocks: block 1 (0 - 100 bytes), block 2 (100 - 200 bytes), block 3 (200 - 300 bytes), block 4 (300 - 400 bytes) and block 5 (400 - 495 bytes)
+- We assign each block to a datanode using the modulo operation:
+    - block 1 replica 1 (datanode 1)
+    - block 2 replica 1 (datanode 2)
+    - block 3 replica 1 (datanode 3)
+    - block 4 replica 1 (datanode 1)
+    - block 5 replica 1 (datanode 2)
+
+To place replicas, we will use a similar logic. Each replica will be placed to the next `datanode`: `datanode_index = ((first_replica_datanode_index + replica_number) % total_datanodes)`.
+
+For example, consider a system with 3 `datanodes`, `block_size=100` and `replication_factor=2`. Then, if a client wants to store a file that weights 295 bytes:
+- File is divided in 3 blocks: block 1 (0 - 100 bytes), block 2 (100 - 200 bytes), block 3 (200 - 295 bytes)
+- We assign each block and replica to a datanode using the modulo operation:
+    - block 1 replica 1 (datanode 1), block 1 replica 2 (datanode 2)
+    - block 2 replica 1 (datanode 2), block 2 replica 2 (datanode 3)
+    - block 3 replica 1 (datanode 3), block 3 replica 2 (datanode 1)
+
+
 #### POST /block_report
 
 POSTing to `/block_report` is used by each `datanode` to send block reports to the `namenode`. The body of the request contains all the blocks stored in the datanode. The body of the response contains all blocks the `namenode` has decided this `datanode` should remove (because they are overreplicated or the fila has been removed) or send to another `datanode` (because they are underreplicated).
@@ -799,31 +824,6 @@ Response:
     ]
 }
 ```
-
-
-##### block and replica placement
-
-In SSHDFS, we will use a very simple block and replica placement strategy.
-
-The first block of a file will always be stored in datanode 1. Then, all the following blocks will be assigned using the modulo operator: `datanode_index = (block_number % total_datanodes)`.
-
-For example, consider a system with 3 `datanodes`, `block_size=100` and `replication_factor=1`. Then, if a client wants to store a file that weights 495 bytes:
-- File is divided in 5 blocks: block 1 (0 - 100 bytes), block 2 (100 - 200 bytes), block 3 (200 - 300 bytes), block 4 (300 - 400 bytes) and block 5 (400 - 495 bytes)
-- We assign each block to a datanode using the modulo operation:
-    - block 1 replica 1 (datanode 1)
-    - block 2 replica 1 (datanode 2)
-    - block 3 replica 1 (datanode 3)
-    - block 4 replica 1 (datanode 1)
-    - block 5 replica 1 (datanode 2)
-
-To place replicas, we will use a similar logic. Each replica will be placed to the next `datanode`: `datanode_index = ((first_replica_datanode_index + replica_number) % total_datanodes)`.
-
-For example, consider a system with 3 `datanodes`, `block_size=100` and `replication_factor=2`. Then, if a client wants to store a file that weights 295 bytes:
-- File is divided in 3 blocks: block 1 (0 - 100 bytes), block 2 (100 - 200 bytes), block 3 (200 - 295 bytes)
-- We assign each block and replica to a datanode using the modulo operation:
-    - block 1 replica 1 (datanode 1), block 1 replica 2 (datanode 2)
-    - block 2 replica 1 (datanode 2), block 2 replica 2 (datanode 3)
-    - block 3 replica 1 (datanode 3), block 3 replica 2 (datanode 1)
 
 
 #### GET /files/{filename}
