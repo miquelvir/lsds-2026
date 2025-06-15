@@ -14,6 +14,24 @@ Requirements are divided into categories to help you prioritize.
 | 30% | Difficult, complex exercises             | (^^^)    |
 | +3/10 (extra) | Advanced, challenges for diving deep       | (^^^^)   |
 
+# Submit for grading
+
+When you have finished the project, follow these steps to submit it for grading:
+
+1. In [submission.json](./submission.json), add a list of all exercises you have completed. If you don't add them, they won't be graded. For example:
+
+    ```json
+    [
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.2.1",
+        "1.2.6"
+    ]
+    ```
+    
+2. Submit a link to the repository in the Aula Global task
+
 # Work breakdown
 
 ## [1.1] FastAPI, Docker and Docker Compose
