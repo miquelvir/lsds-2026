@@ -38,8 +38,8 @@ When you have finished the project, follow these steps to submit it for grading:
 
 ## [1.1] FastAPI, Docker and Docker Compose
 
-During this lab, you will review HDFS and learn how to code APIs with FastAPI and deploy them with Docker.
-
+> [!IMPORTANT]
+> You will learn how to code APIs with FastAPI and deploy them with Docker.
 
 ### [1.1.1] Starting a containerized service
 
@@ -120,7 +120,8 @@ curl -X POST "http://localhost:8000/multiply/4/5"
 
 ## [1.2] Namenode
 
-You will build the `namenode` service as described in [namenode](#namenode). The `namenode` service has an API that allows creating files, adding blocks to files and reading the file metadata.
+> [!IMPORTANT]
+> You will build the `namenode` service as described in [namenode](#namenode). The `namenode` service has an API that allows creating files, adding blocks to files and reading the file metadata.
 
 ### [1.2.1] Listing datanodes (^)
 
@@ -410,8 +411,8 @@ async def schedule_periodic():
 
 ## [1.3] Datanode
 
-You will build the `datanode` service as described in [datanode](#datanode). The `datanode` service has an API that allows storing and reading blocks.
-
+> [!IMPORTANT]
+> You will build the `datanode` service as described in [datanode](#datanode). The `datanode` service has an API that allows storing and reading blocks.
 
 ### [1.3.1] Writing blocks (^)
 
@@ -497,7 +498,8 @@ Keep track of the last time a `datanode` has sent a block report. If none has be
 
 ## [1.4] Client
 
-You will build a [Python client](#client) which allows uploading and download files as blocks from SSHDFS. When uploading a file, the client is in charge of dividing the file into blocks and uploading each of them. When downloading a file, the client is in charge of appending all the downloaded blocks together in the final file.
+> [!IMPORTANT]
+> You will build a [Python client](#client) which allows uploading and download files as blocks from SSHDFS. When uploading a file, the client is in charge of dividing the file into blocks and uploading each of them. When downloading a file, the client is in charge of appending all the downloaded blocks together in the final file.
 
 ### [1.4.1] List datanodes (^^)
 
