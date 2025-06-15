@@ -9,6 +9,14 @@ During the course you must deliver these 3 projects:
 - [MapReduce project](./projects/2-mapreduce/README.md)
 - [Kafka project](./projects/3-kafka/README.md)
 
+# Additional resources
+
+We include ready-to-use templates for every system you study in the course:
+- [How to run FastAPI locally with Docker](./resources/fastapi-quickstart/README.md)
+- [How to run HDFS locally with Docker](./resources/hdfs-quickstart/README.md)
+- [How to run Kafka locally with Docker and use the Kafka client](./resources/kafka-quickstart/README.md)
+- [How to run Spark locally with Docker](./resources/sparkrdd-quickstart/README.md)
+
 # Coding guidelines
 
 - Use git commits and pushes (copying and pasting code through the GitHub web UI is not allowed). [Help](https://www.youtube.com/watch?v=i_23KUAEtUM)
@@ -22,7 +30,7 @@ During the course you must deliver these 3 projects:
 
 # Plagiarism
 
-Submitting a labs/seminars project which contains code you have not authored is considered plagiarism.
+Submitting a project which contains code you have not authored or don't understand is considered plagiarism.
 
 - You MUST NOT ask other students for their project or fragments of their code.
 - You MUST add a link next to any code you copy from external sources.
@@ -33,11 +41,3 @@ Submitting a labs/seminars project which contains code you have not authored is 
 - You MUST NOT look at anyone else's solutions, including previous year students.
 
 In case copying is suspected, the School Direction will be informed as per [the protocol](https://www.upf.edu/web/usquid-etic/plag-doc-teachers). These offenses are [sanctioned](https://seuelectronica.upf.edu/regim-disciplinari-dels-estudiants-de-la-universitat-pompeu-fabra) with temporary expulsion from the University, loss of the right to be assessed in all or part of the courses, and/or others.
-
-# Additional resources
-
-We include ready-to-use templates for every system you study in the course:
-- [How to run FastAPI locally with Docker](./resources/fastapi-quickstart/README.md)
-- [How to run HDFS locally with Docker](./resources/hdfs-quickstart/README.md)
-- [How to run Kafka locally with Docker and use the Kafka client](./resources/kafka-quickstart/README.md)
-- [How to run Spark locally with Docker](./resources/sparkrdd-quickstart/README.md)
