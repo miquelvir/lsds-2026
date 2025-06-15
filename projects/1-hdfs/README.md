@@ -30,7 +30,9 @@ When you have finished the project, follow these steps to submit it for grading:
     ]
     ```
     
-2. Submit a link to the repository in the Aula Global task
+2. Make sure the basic tests are passing in the `Actions` tab in GitHub
+
+4. Submit a link to the repository in the Aula Global task
 
 # Work breakdown
 
