@@ -269,12 +269,12 @@ The goal of this exercise is to avoid writing and reading the full `checkpoint.j
 This is an example of a journal and the image you can build after reading it:
 
 ```
-create-file {"file_name": "myfile.jpg","block_size_bytes": 1000000}
-create-block { "file_name": "myfile.jpg", "number": 0, "replicas": [ "1", "2" ] }
-create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
-create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
-create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
-create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
+0 create-file {"file_name": "myfile.jpg","block_size_bytes": 1000000}
+1 create-block { "file_name": "myfile.jpg", "number": 0, "replicas": [ "1", "2" ] }
+2 create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
+3 create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
+4 create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
+5 create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
 ```
 
 ```json
