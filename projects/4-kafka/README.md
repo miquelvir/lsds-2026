@@ -37,12 +37,12 @@ When you have finished the project, follow these steps to submit it for grading:
 
 This section presents a step by step work breakdown to help you implement SSKafka. Refer to the [Design](#design) section for the full system design reference.
 
-## [3.1] Control plane: implementing the broker Admin API
+## [4.1] Control plane: implementing the broker Admin API
 
 > [!IMPORTANT]
 > The goal of this lab is to implement a basic broker service which allows you to create and list topics through its API. When the admin API is ready, you will implement some Python client scripts which use it to make creating and listing topics easier.
 
-### [3.1.1] Run 5 brokers in Docker Compose (^)
+### [4.1.1] Run 5 brokers in Docker Compose (^)
 
 Bootstrap a FastAPI service for the broker with a single [GET /healthcheck](#get-healthcheck) endpoint.
 
@@ -117,7 +117,7 @@ curl "http://localhost:8005/healthcheck" -s | jq
 
 </details>
 
-### [3.1.2] Implement admin API for creating topics (^)
+### [4.1.2] Implement admin API for creating topics (^)
 
 Implement the [POST /admin/v1/topics](#post-adminv1topics) endpoint. You should persist every created topic in the [__cluster_metadata.log](#metadata-log) file.
 
@@ -193,7 +193,7 @@ curl -X POST "http://localhost:8002/admin/v1/topics" -H 'Content-Type: applicati
 
 </details>
 
-### [3.1.3] Implement admin API for listing topics (^)
+### [4.1.3] Implement admin API for listing topics (^)
 
 Implement the [GET /admin/v1/topics](#get-adminv1topics) endpoint. You should read the topics from the [__cluster_metadata.log](#metadata-log) file.
 
@@ -292,14 +292,14 @@ curl -X GET "http://localhost:8001/admin/v1/topics" -s | jq
 </details>
 
 
-### [3.1.4] Implement admin API for deleting a topic (^^)
+### [4.1.4] Implement admin API for deleting a topic (^^)
 
 Implement the [DELETE /admin/v1/topics/{topic_name}](#delete-adminv1topicstopic_name) endpoint. You should persist every deleted topic to the [metadata.log](#metadata-log) file.
 
 > [!WARNING]
 > Make sure the `GET /admin/v1/topics` endpoint works as expected after removing a topic.
 
-### [3.1.5] Implement a Python client to create topics (^^)
+### [4.1.5] Implement a Python client to create topics (^^)
 
 Create a folder `client` with the following files: `requirements.txt` and `create_topic.py`. Then, implement the [create_topic.py](#create_topicpy) client script.
 
@@ -345,7 +345,7 @@ python3 create_topic.py mynewtopic -p 3 -r 2
 
 </details>
 
-### [3.1.6] Implement a Python client to list topics (^^)
+### [4.1.6] Implement a Python client to list topics (^^)
 
 Implement the [list_topics.py](#list_topicspy) client script.
 
@@ -439,17 +439,17 @@ python3 list_topics.py
 
 </details>
 
-### [3.1.7] Implement a Python client to delete topics (^^)
+### [4.1.7] Implement a Python client to delete topics (^^)
 
 Implement the [delete_topic.py](#delete_topicpy) client script.
 
 
-## [3.2] Data plane: Implementing the broker data API
+## [4.2] Data plane: Implementing the broker data API
 
 > [!IMPORTANT]
 > The goal of this lab is to complete the broker implementation with the APIs that allow producing and consuming from a topic-partition. When you are already able to produce and consume records from the leader, you will implement partition replication. I.e., replicating the partition log to the other brokers.
 
-### [3.2.1] Implement the API for producing records to a topic-partition (^)
+### [4.2.1] Implement the API for producing records to a topic-partition (^)
 
 Implement the [POST /data/v1/produce](#post-datav1produce) endpoint. For now, you should ignore the `acks` field. When you receive a produce request, append the record with increasing offset at the end of the [partition log](#partition-log) file.
 
@@ -494,7 +494,7 @@ If you go to the `/data/testtopic-1/00000000000000000000.log` file in the broker
 
 
 
-### [3.2.2] Implement the API for consuming records from a topic-partition (^)
+### [4.2.2] Implement the API for consuming records from a topic-partition (^)
 
 Implement the [POST /data/v1/consume](#post-datav1consume) endpoint. For now, ignore the `follower_broker_id` field.
 
@@ -571,7 +571,7 @@ Produced third message
 </details>
 
 
-### [3.2.3] Replicate partition to follower brokers (^)
+### [4.2.3] Replicate partition to follower brokers (^)
 
 Until now, the leader broker stores the only copy of every partition since it is the one that handles all the produce and consume requests. However, this is not acceptable in terms of durability. What if the broker dies, or if its partition log is corrupted? We must replicate partitions to the rest of brokers.
 
@@ -627,7 +627,7 @@ If you open the partition log file using Docker Desktop for every follower broke
 </details>
 
 
-### [3.2.4] Implement a Python client to produce records (^^)
+### [4.2.4] Implement a Python client to produce records (^^)
 
 Implement the [produce.py](#producepy) client script.
 
@@ -654,7 +654,7 @@ If you open the partition log from the leader broker using the Docker Desktop fi
 
 </details>
 
-### [3.2.5] Implement a Python client to consume records (^^)
+### [4.2.5] Implement a Python client to consume records (^^)
 
 Implement the [consume.py](#consumepy) client script.
 
@@ -689,7 +689,7 @@ Every message you produce, if its stored in the partition 1 (depending on the ke
 </details>
 
 
-### [3.2.6] Implement produce acknowldgements (^^^^)
+### [4.2.6] Implement produce acknowldgements (^^^^)
 
 The goal of this task is waiting for all consumers to have guaranteed storing a record before completing each produce request.
 
@@ -705,7 +705,7 @@ First, extend your [POST /data/v1/produce](#post-datav1produce) endpoint to acce
 To do this, you will need to track which is the last offset that every follower broker has consumed. To this end, extend your [POST /data/v1/consume](#post-datav1consume) endpoint to accept the `follower_broker_id` field. When the `follower_broker_id` field is null, it means that a client is consuming from the partition. However, when the `follower_broker_id` field is not null, it means that a follower broker is consuming a partition to replicate it to its partition log. When a follower consumes records, use the `last_offset` from the request body as an acknowledgement of the last record it has stored in its log.
 
 
-### [3.2.7] Dividing the partition log in segments (^^^^)
+### [4.2.7] Dividing the partition log in segments (^^^^)
 
 Until now, the [partition log](#partition-log) is stored always in the `00000000000000000000.log` file of the topic partition folder.
 
@@ -714,7 +714,7 @@ As you can imagine, storing all the records from a partition in a single file is
 To this end, define a `MAX_SEGMENT_SIZE_BYTES`. When the `00000000000000000000.log` file exceeds that size, create a new segment file in the same folder to continue appending records. For example, `00000000000000005000.log` (assuming the last record of the first segment had offset 4999). Continue creating new segment files whenever they exceed the `MAX_SEGMENT_SIZE_BYTES` size.
 
 
-### [3.2.8] Storing the partition log in binary format (^^^^)
+### [4.2.8] Storing the partition log in binary format (^^^^)
 
 Until now, the [partition log](#partition-log) is stored in text format. One record per line.
 
@@ -738,7 +738,7 @@ packet-beta
 
 Then, use `file.seek()` to skip all the payload bytes and go directly to the next record while looking for an offset.
 
-### [3.2.9] Indexing offsets (^^^^)
+### [4.2.9] Indexing offsets (^^^^)
 
 You might have noticed that it is very inefficient to read all lines in a partition one by one until we find the desired offset. Instead, create a `.index` file for each segment that maps some offsets to their initial byte position in the corresponding `.log` file. 
 
@@ -748,7 +748,7 @@ Then, improve the implementation of [POST /data/v1/consume](#post-datav1consume)
 - Use the `seek(byte_position)` function to directly jump to that position in the log file.
 
 
-## [3.3] Control plane: distributed metadata with KRaft
+## [4.3] Control plane: distributed metadata with KRaft
 
 > [!IMPORTANT]
 > Until now, the leader has always been broker 1. What if broker 1 dies? Then the system goes down and no client can't produce or consume from any topic. We need to fix this! To this end, we will allow the brokers to decide a leader on their own through the Raft consesus algorithm. If the leader goes down, a new broker will become the leader.
@@ -820,7 +820,7 @@ class KRaft:
 ```
 
 
-### [3.3.1] Initializing the quorum-state file (^^^)
+### [4.3.1] Initializing the quorum-state file (^^^)
 
 The KRaft protocol needs to persist the: leader id, leader epoch and voted id. When the broker starts up, create an empty `metadata/quorum-state` file with the default values if it does not exist:
 
@@ -834,7 +834,7 @@ The KRaft protocol needs to persist the: leader id, leader epoch and voted id. W
 
 If it exists, it should load them.
 
-### [3.3.2] Voting (^^^)
+### [4.3.2] Voting (^^^)
 
 Implement the [vote request endpoint](#post-kraftv1voterequest). 
 
@@ -889,7 +889,7 @@ curl "http://localhost:8001/kraft/v1/voteRequest" -s -H "Content-Type: applicati
 
 </details>
 
-### [3.3.3] Begining a quorum (^^^)
+### [4.3.3] Begining a quorum (^^^)
 
 Implement the [begin quorum epoch endpoint](#post-kraftv1beginquorumepoch).
 
@@ -917,7 +917,7 @@ curl "http://localhost:8001/kraft/v1/beginQuorumEpoch" -s -H "Content-Type: appl
 
 </details>
 
-### [3.3.4] Elections after initialization (^^^)
+### [4.3.4] Elections after initialization (^^^)
 
 When the broker starts, if the `leader_id` from the quorum state file is `-1` (no leader), each broker should:
 - wait a random amount of seconds (to reduce split elections)
@@ -927,17 +927,17 @@ When the broker starts, if the `leader_id` from the quorum state file is `-1` (n
     - if it wins the election, store it in its quorum state file and notify all other brokers using the [/beginQuorumEpoch endpoint](#post-kraftv1beginquorumepoch)
     - if it looses the election and there is still no leader, it should wait a random amount of seconds and try again
 
-### [3.3.5] Replicating the metadata log (^^^)
+### [4.3.5] Replicating the metadata log (^^^)
 
 Implement the [/fetchMetadata endpoint](#post-kraftv1fetchmetadata).
 
 When the broker is not the leader, it should use the [/fetchMetadata endpoint](#post-kraftv1fetchmetadata) to fetch new metadata entries from the leader's log every second. For every metadata entry it receives, it should store it in its own metadata log.
 
-### [3.3.6] Handling metadata log divergences (^^^^)
+### [4.3.6] Handling metadata log divergences (^^^^)
 
 Extend the [/fetchMetadata endpoint](#post-kraftv1fetchmetadata) such that if the follower last fetched epoch and offset are not coherent with the leader's log, the leader returns the diverging epoch and offset. Then, the follower should truncate its log and fetch again.
 
-### [3.3.7] Waiting to commit control plane changes (^^^^)
+### [4.3.7] Waiting to commit control plane changes (^^^^)
 
 Modify the existing [POST /admin/v1/topics endpoint](#post-adminv1topics) and [DELETE /admin/v1/topics/{name} endpoint](#delete-adminv1topicstopic_name) to wait until a majority of brokers have stored the changes on their log.
 
@@ -946,14 +946,14 @@ Use the `last_offset` and `follower_broker_id` fields each follower sends in the
 When `F+1` brokers (`F` followers + the leader, a majority) have stored the metadata change in their log, consider it committed. Then, finally respond to the client request successfuly.
 
 
-### [3.3.8] Elections after leader failure (^^^)
+### [4.3.8] Elections after leader failure (^^^)
 
 When the leader is down (i.e. you stop it), requests to consume will fail. In such a scenario, the follower should become a candidate:
 - start collecting votes from all other brokers using the [/voteRequest endpoint](#post-kraftv1voterequest)
 - if it wins the election, store it in its quorum state file and notify all other brokers using the [/beginQuorumEpoch endpoint](#post-kraftv1beginquorumepoch)
 - if it looses the election and there is still no leader, it should wait a random amount of seconds and try again
 
-### [3.3.9] Follower recovery (^^^)
+### [4.3.9] Follower recovery (^^^)
 
 When a broker recovers from being disconnected, whether it previously was a follower or a leader (and it has since been replaced), it should be able to reconnect to the system without causing an election.
 

@@ -1,0 +1,42 @@
+name: sparkrdd
+services:
+  spark-master:
+    image: bitnami/spark:latest
+    command: bin/spark-class org.apache.spark.deploy.master.Master
+    user: root
+    ports:
+      - "9090:8080"
+      - "7077:7077"
+    volumes:
+      - .:/opt/bitnami/spark/app
+      - outputs:/opt/bitnami/spark/output
+  spark-worker-1:
+    image: bitnami/spark:latest
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    user: root
+    depends_on:
+      - spark-master
+    volumes:
+      - .:/opt/bitnami/spark/app
+      - outputs:/opt/bitnami/spark/output
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_MASTER_URL: spark://spark-master:7077
+  spark-worker-2:
+    image: bitnami/spark:latest
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    user: root
+    depends_on:
+      - spark-master
+    volumes:
+      - .:/opt/bitnami/spark/app
+      - outputs:/opt/bitnami/spark/output
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 2g
+      SPARK_MASTER_URL: spark://spark-master:7077
+volumes:
+  outputs: 

@@ -188,7 +188,7 @@ Test it works with curl.
 Right now, we send tasks to workers immediately. If there are many tasks, the workers could be overwhelmed. Instead, have each worker work on at most 1 task at the same time. If all workers are full, wait until they become available to send more tasks to them.
 
 
-## [2.3.] Using MapReduce
+## [2.3] Using MapReduce
 
 ### [2.3.1] Modified word count (^^)
 
