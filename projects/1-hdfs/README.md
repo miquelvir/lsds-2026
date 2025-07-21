@@ -123,11 +123,46 @@ curl -X POST "http://localhost:8000/multiply/4/5"
 > [!IMPORTANT]
 > You will build the `namenode` service as described in [namenode](#namenode). The `namenode` service has an API that allows creating files, adding blocks to files and reading the file metadata.
 
-### [1.2.1] Listing datanodes (^)
 
-Create a folder `namenode` with a FastAPI service and its Dockerfile. Create a Docker Compose file as well that brings up 1 `namenode` service in port 7001.
+### [1.2.1] Healthcheck (^)
 
-Then, implement the first endpoint of the `namenode` API: [GET /datanodes](#get-datanodes). Your code must [read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the configured `datanodes` from the [settings.json](#namenode-filesystem) file file and return them.
+Create a folder `namenode` with a FastAPI service and its Dockerfile. Create a Docker Compose file as well that brings up 1 `namenode` service in port 7000.
+
+Implement a basic `/healthcheck` endpoint that always returns this:
+
+```json
+{
+    "status": "up"
+}
+```
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+docker compose up --build
+```
+
+```zsh
+curl "http://localhost:7000/healthcheck" -s | jq
+```
+
+**expected**
+```json
+{
+    "status": "up"
+}
+```
+</details>
+
+
+### [1.2.2] Listing datanodes (^)
+
+Implement the first endpoint of the `namenode` API: [GET /datanodes](#get-datanodes).
+- You must create a [settings.json](#namenode-filesystem) file with the namenode configuration.
+- Your code must [read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the configured `datanodes` from the [settings.json](#namenode-filesystem) file file and return them for each request.
 
 
 <details>
@@ -140,7 +175,7 @@ docker compose up --build
 ```
 
 ```zsh
-curl "http://localhost:7001/datanodes" -s | jq
+curl "http://localhost:7000/datanodes" -s | jq
 ```
 
 **expected**
@@ -197,7 +232,7 @@ curl "http://localhost:7001/datanodes" -s | jq
 
 </details>
 
-### [1.2.2] Creating files (^)
+### [1.2.3] Creating files (^)
 
 Implement the [POST /files](#post-files) endpoint.
 
@@ -227,7 +262,7 @@ curl -X POST "http://localhost:8001/files" --json '{
 </details>
 
 
-### [1.2.3] Retrieving files (^)
+### [1.2.4] Retrieving files (^)
 
 Implement the [GET /files/{filename}](#get-filesfilename) endpoint. 
 
@@ -236,7 +271,7 @@ Implement the [GET /files/{filename}](#get-filesfilename) endpoint.
 
 Make sure you test it works with `curl`.
 
-### [1.2.4] Adding blocks to files (^)
+### [1.2.5] Adding blocks to files (^)
 
 Implement the [POST /files/{filename}/blocks](#post-filesfilenameblocks) endpoint to allow appending a new block to a file.
 
@@ -246,7 +281,7 @@ Implement the [POST /files/{filename}/blocks](#post-filesfilenameblocks) endpoin
 
 Make sure you test it works with `curl`.
 
-### [1.2.5] Deleting files (^^)
+### [1.2.6] Deleting files (^^)
 
 Implement the [DELETE /files/{filename}](#delete-filesfilename) endpoint. 
 
@@ -255,7 +290,7 @@ Implement the [DELETE /files/{filename}](#delete-filesfilename) endpoint.
 
 Make sure you test it works with `curl`.
 
-### [1.2.6] The journal (^^^)
+### [1.2.7] The journal (^^^)
 
 The goal of this exercise is to avoid writing and reading the full `checkpoint.json` file for every change (e.g. new file or block). Instead, implement a write-ahead-log (the journal) for every change.
 
@@ -311,7 +346,7 @@ This is an example of a journal and the image you can build after reading it:
 ```
 
 
-### [1.2.7] Journal checkpoints (^^^)
+### [1.2.8] Journal checkpoints (^^^)
 
 Reading the full `journal.log` every time the `namenode` starts can be very slow if the journal log is very large. The goal is creating checkpoints summarizing all changes up to a given point in time.
 
@@ -380,7 +415,7 @@ This is an example of a checkpoint, the journal and the image you can build afte
 ```
 
 
-### [1.2.8] Backupnode (^^^^)
+### [1.2.9] Backupnode (^^^^)
 
 Right now, if the `namenode` fails, our SSHDFS system is down. In Docker Compose, create a new replica of the `namenode` that acts as a Backup Node in port 7002.
 
@@ -388,7 +423,7 @@ Implement the necessary API so the `namenode` can stream the journal changes to 
 
 Test that if you create a file and some blocks in the main `namenode`, if you use the `backupnode` API you can still GET the new file.
 
-### [1.2.9] Backupnode periodic checkpoints (^^^^)
+### [1.2.10] Backupnode periodic checkpoints (^^^^)
 
 Every 120 seconds, the `backupnode` should store his image as a new checkpoint and send it to the `namenode`. The namenode should then store the new checkpoint and truncate the journal.
 
@@ -414,9 +449,49 @@ async def schedule_periodic():
 > [!IMPORTANT]
 > You will build the `datanode` service as described in [datanode](#datanode). The `datanode` service has an API that allows storing and reading blocks.
 
-### [1.3.1] Writing blocks (^)
+### [1.3.1] Healthcheck (^)
 
-Create a `datanode` fodler with a new FastAPI service and its Dockerfile. Then, add three replicas of the `datanode` service in the Docker Compose file.
+Create a `datanode` folder with a new FastAPI service and its Dockerfile. Then, add three replicas of the `datanode` service in the Docker Compose file in ports 8001, 8002 and 8003.
+
+Implement a basic `/healthcheck` endpoint that always returns this:
+
+```json
+{
+    "status": "up"
+}
+```
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+docker compose up --build
+```
+
+```zsh
+curl "http://localhost:8001/healthcheck" -s | jq
+curl "http://localhost:8002/healthcheck" -s | jq
+curl "http://localhost:8003/healthcheck" -s | jq
+```
+
+**expected**
+```json
+{
+    "status": "up"
+}
+{
+    "status": "up"
+}
+{
+    "status": "up"
+}
+```
+</details>
+
+
+### [1.3.2] Writing blocks (^)
 
 Implement the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_number) endpoint. 
 
@@ -431,7 +506,7 @@ Implement the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenamebl
 
 Test you can upload some of the test blocks: `curl -F "file=@./test_files/test-block-text" -X PUT localhost:8001/files/test-file.txt/blocks/0`. Finally, open the `Files` tab in `Docker Desktop` and verify the block is successfully stored there.
 
-### [1.3.2] Reading blocks (^)
+### [1.3.3] Reading blocks (^)
 
 Implement the [GET /files/{filename}/blocks/{block_number}](#get-filesfilenameblocksblock_number) endpoint. 
 
@@ -443,7 +518,7 @@ Implement the [GET /files/{filename}/blocks/{block_number}](#get-filesfilenamebl
 
 Test you can download the test block we uploaded before with curl: `curl -o downloaded-test-block.txt -X GET localhost:8001/files/test-file.txt/blocks/0`.
 
-### [1.3.3] Write pipelines (^^^)
+### [1.3.4] Write pipelines (^^^)
 
 Extend the `PUT /files/{filename}/blocks/{block_number}` endpoint to allow sending the next `datanode` ids in the write pipeline as a query parameter.
 
@@ -461,7 +536,7 @@ For example:
 > [!TIP]
 > You can use [httpx](https://www.python-httpx.org/quickstart/) to make HTTP requests with Python.
 
-### [1.3.4] Handling deleted files (^^^^)
+### [1.3.5] Handling deleted files (^^^^)
 
 Send a block report from each `datanode` to the `namenode` every 30 seconds:
 - Add an endpoint in the API of the `namenode` to receive the block reports.
@@ -482,7 +557,7 @@ async def schedule_periodic():
     loop.create_task(background_loop())
 ```
 
-### [1.3.5] Handling underreplicated blocks (^^^^)
+### [1.3.6] Handling underreplicated blocks (^^^^)
 
 When you receive a block report from a `datanode`, extend the `namenode` implementation to:
 - Keep track of which blocks are stored in each `datanode` in a dictionary
@@ -491,7 +566,7 @@ When you receive a block report from a `datanode`, extend the `namenode` impleme
 - Answer the next block report from a `datanode` by instructing them to send a copy of undereplicated blocks they own to another `datanode` 
 
 
-### [1.3.6] Handling down datanodes (^^^^)
+### [1.3.7] Handling down datanodes (^^^^)
 
 Keep track of the last time a `datanode` has sent a block report. If none has been received in the last 90 seconds, treat all the block replicas in that `datanode` as missing and add them to the replication queue.
 
@@ -503,7 +578,7 @@ Keep track of the last time a `datanode` has sent a block report. If none has be
 
 ### [1.4.1] List datanodes (^^)
 
-Create a folder `client` with a Python script: `list_datanodes.py` and a `requirements.txt` file with any librarie it needs to run. 
+Create a folder `client` with a Python script: `list_datanodes.py` and a `requirements.txt` file with any libraries it needs to run. 
 
 `list_datanodes.py` must retrieve all the `datanodes` from the `namenode` and prints their host and port:
 - Retrieve the id, host and port of each `datanode` [using the `namenode` API](#get-datanodes). 
@@ -664,10 +739,10 @@ If the `replication_factor` of the system is higher than one, the `replicas` arr
 
 The client can retrieve all `datanodes` configured in SSHDFS using the `datanodes` endpoint.
 
-For example, the `client` can retrieve all `datanodes` configured in the `namenode` with address `localhost:7001` as follows:
+For example, the `client` can retrieve all `datanodes` configured in the `namenode` with address `localhost:7000` as follows:
 
 ```
-GET http://localhost:7001/datanodes
+GET http://localhost:7000/datanodes
 ```
 
 Response:
@@ -694,10 +769,10 @@ Response:
 
 POSTing to `/files` creates a new file in the `namenode`. Use the `block_size_bytes` configured in `settings.json`.
 
-For example, the `client` can create a file called `myfile.jpg` in the `namenode` with address `localhost:7001`as follows:
+For example, the `client` can create a file called `myfile.jpg` in the `namenode` with address `localhost:7000`as follows:
 
 ```
-POST http://localhost:7001/files
+POST http://localhost:7000/files
 ```
 
 Body:
@@ -722,10 +797,10 @@ If the file already exists in the `namenode`, the response must be a 409.
 
 POSTing to `/files/{filename}/blocks` adds a block to an existing file.
 
-For example, the `client` can add a block to the file `myfile.jpg` in the `namenode` with address `localhost:7001` as follows:
+For example, the `client` can add a block to the file `myfile.jpg` in the `namenode` with address `localhost:7000` as follows:
 
 ```
-POST http://localhost:7001/files/myfile.jpg/blocks
+POST http://localhost:7000/files/myfile.jpg/blocks
 ```
 
 Body:
@@ -783,7 +858,7 @@ POSTing to `/block_report` is used by each `datanode` to send block reports to t
 For example:
 
 ```
-POST http://localhost:7001/block_report
+POST http://localhost:7000/block_report
 ```
 
 Body:
@@ -830,10 +905,10 @@ Response:
 
 GETting `/files/{filename}` retrieves the file metadata from the `namenode`. 
 
-For example, the `client` can retrieve all the information about a file called `myfile.jpg` from the `namenode` with address `localhost:7001` as follows:
+For example, the `client` can retrieve all the information about a file called `myfile.jpg` from the `namenode` with address `localhost:7000` as follows:
 
 ```
-GET http://localhost:7001/files/myfile.jpg
+GET http://localhost:7000/files/myfile.jpg
 ```
 
 Response:
@@ -864,10 +939,10 @@ If the file does not exist in the `namenode`, the response must be a 404.
 
 DELETEing `/files/{filename}` removes the file from the `namenode`. 
 
-For example, the `client` can delete a file called `myfile.jpg` from the `namenode` with address `localhost:7001` as follows:
+For example, the `client` can delete a file called `myfile.jpg` from the `namenode` with address `localhost:7000` as follows:
 
 ```
-DELETE http://localhost:7001/files/myfile.jpg
+DELETE http://localhost:7000/files/myfile.jpg
 ```
 
 Response: 204
