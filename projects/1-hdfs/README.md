@@ -43,7 +43,7 @@ When you have finished the project, follow these steps to submit it for grading:
 
 ### [1.1.1] Starting a containerized service
 
-Run [fastapi-quickstart](../../resources/fastapi-quickstart/) using `docker compose up`.
+Run [fastapi-quickstart](../../resources/fastapi-quickstart/) using `docker compose up --build`.
 
 - This starts a Python API service and runs it inside a Docker container.
 - The [main.py](../../resources/fastapi-quickstart/app/main.py) file implements 3 API endpoints.
