@@ -70,23 +70,23 @@ If you get stuck and need help, come to the office hours:
 ## Creating your group's repository
 
 > [!NOTE]
-> All (3) members of your group must be from the same seminar.
+> All (3) members of your group must be from the same lab group.
 > Only one member of the group must create the repository and share it with the others.
 
 - Fill in [this spreadsheet](https://docs.google.com/spreadsheets/d/1PrI6Jb5mVEeFuKNJeFE9dosFC7cP6vhoScFY2L2uZxk/edit?usp=sharing) with your group members.
 
-- Click the [Use this template -> Create a new repository](https://github.com/miquelvir/lsds-2026) button and create a **private** repository with the following name: `lsds-2026-{group_number}-t{theory_number}-p{lab_number}-s{seminar_number}`. For example, `lsds-2026-01-t1-p102-s103`.
+- Click the [Use this template -> Create a new repository](https://github.com/miquelvir/lsds-2026) button and create a **private** repository with the following name: `lsds-2026-{group_number}-t{theory_number}-p{lab_number}`. For example, `lsds-2026-01-t1-p102`.
 
 - Share the repository with [all teachers](./TEACHER_LIST.md). [Help](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository#inviting-a-collaborator-to-a-personal-repository)
 
 - Share the repository with the other two members of your group. [Help](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository#inviting-a-collaborator-to-a-personal-repository)
 
 > [!WARNING]
-> If you use WSL, clone your repository to the following path: `\\wsl.localhost\Ubuntu\home\{username}\lsds`.
+> If you use Windows, clone your repository to the following path: `\\wsl.localhost\Ubuntu\home\{username}\lsds`.
 > 
 > Everything inside `\\wsl.localhost` is the file system of your Linux subsystem.
 
-- Clone the repository using Github Desktop or VSCode. [Help](https://docs.github.com/en/desktop/adding-and-cloning-repositories/cloning-a-repository-from-github-to-github-desktop)
+- Clone the repository using VSCode. [Help](https://code.visualstudio.com/docs/sourcecontrol/intro-to-git#_clone-a-repository-locally)
 
 ## Making sure Python and Docker work
 
