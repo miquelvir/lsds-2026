@@ -1,13 +1,12 @@
 # Large Scale Distributed Systems (LSDS)
 
-Follow the [Developer setup](./DEVELOPER_SETUP.md) to get started.
+To get started, follow the [Developer setup](./DEVELOPER_SETUP.md) to get started.
 
-# Projects
-
-During the course you must deliver these 3 projects:
+During the course you must one project for each system we study:
 - [HDFS project](./projects/1-hdfs/README.md)
 - [MapReduce project](./projects/2-mapreduce/README.md)
-- [Kafka project](./projects/3-kafka/README.md)
+- [Spark RDD project](./projects/3-sparkrdd/README.md)
+- [Kafka project](./projects/4-kafka/README.md)
 
 # Additional resources
 
