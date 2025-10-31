@@ -16,7 +16,7 @@ If you get stuck and need help, come to the office hours:
 
 ### Version Control
 
-- [Install GitHub Desktop](https://desktop.github.com/download/)
+- [Install Git](https://git-scm.com/install)
 
 ### Docker
 
@@ -26,20 +26,23 @@ If you get stuck and need help, come to the office hours:
 
 - If you use Windows, [install WSL](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
+> [!INFO]
+> WSL allows you to run Linux inside Windows.
+
 ### Configure VSCode
 
 - [Install the Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 - [Install the Markdown Preview Mermaid Support extension](https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid)
 - [Install the Markdown Alert extension](https://marketplace.visualstudio.com/items?itemName=yahyabatulu.vscode-markdown-alert)
 - [Install the Black Formatter extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter)
-- Only if you use Windows + WSL, [change the default terminal in VSCode to WSL](https://stackoverflow.com/questions/44435697/change-the-default-terminal-in-visual-studio-code)
+- If you use Windows, [change the default terminal in VSCode to WSL](https://stackoverflow.com/questions/44435697/change-the-default-terminal-in-visual-studio-code)
 
 ### Python
 
 > [!WARNING]
-> If you use WSL, remember to run these commands in the WSL terminal.
+> If you use Windows, remember to run these commands in the WSL terminal.
 
-- Verify if you have Python installed
+- Verify you have Python installed
 
     ```zsh
     $ python3 --version
@@ -52,7 +55,7 @@ If you get stuck and need help, come to the office hours:
 ### JQ
 
 > [!WARNING]
-> If you use WSL, remember to run these commands in the WSL terminal.
+> If you use Windows, remember to run these commands in the WSL terminal.
 
 - [Install jq](https://jqlang.github.io/jq/download/)
 
