@@ -183,46 +183,17 @@ curl "http://localhost:7000/datanodes" -s | jq
 {
     "datanodes": [
         {
+            "id": "1",
             "host": "localhost",
             "port": 8001
         },
         {
+            "id": "2",
             "host": "localhost",
             "port": 8002
         },
         {
-            "host": "localhost",
-            "port": 8003
-        }
-    ]
-}
-{
-    "datanodes": [
-        {
-            "host": "localhost",
-            "port": 8001
-        },
-        {
-            "host": "localhost",
-            "port": 8002
-        },
-        {
-            "host": "localhost",
-            "port": 8003
-        }
-    ]
-}
-{
-    "datanodes": [
-        {
-            "host": "localhost",
-            "port": 8001
-        },
-        {
-            "host": "localhost",
-            "port": 8002
-        },
-        {
+            "id": "3",
             "host": "localhost",
             "port": 8003
         }
@@ -297,66 +268,11 @@ The goal of this exercise is to avoid writing and reading the full `checkpoint.j
 - When the `namenode` starts:
     - Create an empty `journal.log` file if it not exists.
     - Go through every line in the journal file and load it into the in-memory image (a dictionary).
+    - Store the image to the `checkpoint.json` and empty the `journal.log`.
 - Whenever a file is created, a block is added or a file is removed:
     - Append it to the journal first
     - Then update the in-memory image
     
-This is an example of a journal and the image you can build after reading it:
-
-```
-0 create-file {"file_name": "myfile.jpg","block_size_bytes": 1000000}
-1 create-block { "file_name": "myfile.jpg", "number": 0, "replicas": [ "1", "2" ] }
-2 create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
-3 create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
-4 create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
-5 create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
-```
-
-```json
-{
-    "cat.jpg": {
-        "file_name": "cat.jpg",
-        "block_size_bytes": 1000000,
-        "blocks": [
-            {
-                "number": 0,
-                "replicas": [ "1", "2" ]
-            },
-            {
-                "number": 1,
-                "replicas": [ "2", "3" ]
-            },
-            {
-                "number": 2,
-                "replicas": [ "3", "1" ]
-            }
-        ]
-    },
-    "somefile.txt": {
-        "file_name": "somefile.txt",
-        "block_size_bytes": 1000000,
-        "blocks": [
-            {
-                "number": 0,
-                "replicas": [ "1", "2" ]
-            }
-        ]
-    }
-}
-```
-
-
-### [1.2.8] Journal checkpoints (^^^)
-
-Reading the full `journal.log` every time the `namenode` starts can be very slow if the journal log is very large. The goal is creating checkpoints summarizing all changes up to a given point in time.
-
-Modify your implementation, such that when the `namenode` starts:
-- Create an empty `checkpoint.json` file if it not exists.
-- Load the `checkpoint.json` data into the in-memory image (dictionary)
-- Then read the `journal.log` and apply changes to the in-memory image
-- Before continuing, store the final image in `checkpoint.json` and empty the `journal.log` file. This way, the next time all the changes in the journal have already been processed and consolidated into the checkpoint.
-
- 
 This is an example of a checkpoint, the journal and the image you can build after reading both:
 
 ```json
@@ -414,8 +330,7 @@ This is an example of a checkpoint, the journal and the image you can build afte
 }
 ```
 
-
-### [1.2.9] Backupnode (^^^^)
+### [1.2.8] Backupnode (^^^^)
 
 Right now, if the `namenode` fails, our SSHDFS system is down. In Docker Compose, create a new replica of the `namenode` that acts as a Backup Node in port 7002.
 
@@ -423,7 +338,7 @@ Implement the necessary API so the `namenode` can stream the journal changes to 
 
 Test that if you create a file and some blocks in the main `namenode`, if you use the `backupnode` API you can still GET the new file.
 
-### [1.2.10] Backupnode periodic checkpoints (^^^^)
+### [1.2.9] Backupnode periodic checkpoints (^^^^)
 
 Every 120 seconds, the `backupnode` should store his image as a new checkpoint and send it to the `namenode`. The namenode should then store the new checkpoint and truncate the journal.
 
