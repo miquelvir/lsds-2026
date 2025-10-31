@@ -1,8 +1,9 @@
 # Large Scale Distributed Systems (LSDS)
 
-To get started, follow the [Developer setup](./DEVELOPER_SETUP.md) to get started.
+To get started, follow the [Developer setup](./DEVELOPER_SETUP.md).
 
-During the course you must one project for each system we study:
+# Projects
+
 - [HDFS project](./projects/1-hdfs/README.md)
 - [MapReduce project](./projects/2-mapreduce/README.md)
 - [Spark RDD project](./projects/3-sparkrdd/README.md)
