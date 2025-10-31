@@ -26,7 +26,7 @@ If you get stuck and need help, come to the office hours:
 
 - If you use Windows, [install WSL](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/guides/install-ubuntu-wsl2/).
 
-> [!INFO]
+> [!NOTE]
 > WSL allows you to run Linux inside Windows.
 
 ### Configure VSCode
