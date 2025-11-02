@@ -73,9 +73,9 @@ If you get stuck and need help, come to the office hours:
 > All (3) members of your group must be from the same lab group.
 > Only one member of the group must create the repository and share it with the others.
 
-- Fill in [this spreadsheet](https://docs.google.com/spreadsheets/d/1PrI6Jb5mVEeFuKNJeFE9dosFC7cP6vhoScFY2L2uZxk/edit?usp=sharing) with your group members.
+- Choose your group in Aula Global.
 
-- Click the [Use this template -> Create a new repository](https://github.com/miquelvir/lsds-2026) button and create a **private** repository with the following name: `lsds-2026-{group_number}-t{theory_number}-p{lab_number}`. For example, `lsds-2026-01-t1-p102`.
+- Click the [Use this template -> Create a new repository](https://github.com/miquelvir/lsds-2026) button and create a **private** repository with the following name: `lsds-2026-{lab_number}-{group_number}`. For example, `lsds-2026-102-3`.
 
 - Share the repository with [all teachers](./TEACHER_LIST.md). [Help](https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository#inviting-a-collaborator-to-a-personal-repository)
 
