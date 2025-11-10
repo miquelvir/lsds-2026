@@ -126,7 +126,7 @@ curl -X POST "http://localhost:8000/multiply/4/5"
 
 ### [1.2.1] Healthcheck (^)
 
-Create a folder `namenode` with a FastAPI service and its Dockerfile. Create a Docker Compose file as well that brings up 1 `namenode` service in port 7000.
+Create a folder `namenode` with a FastAPI service and its Dockerfile. Create a Docker Compose file as well that brings up 1 `namenode` service in port 8000.
 
 Implement a basic `/healthcheck` endpoint that always returns this:
 
@@ -146,7 +146,7 @@ docker compose up --build
 ```
 
 ```zsh
-curl "http://localhost:7000/healthcheck" -s | jq
+curl "http://localhost:8000/healthcheck" -s | jq
 ```
 
 **expected**
@@ -175,7 +175,7 @@ docker compose up --build
 ```
 
 ```zsh
-curl "http://localhost:7000/datanodes" -s | jq
+curl "http://localhost:8000/datanodes" -s | jq
 ```
 
 **expected**
@@ -654,10 +654,10 @@ If the `replication_factor` of the system is higher than one, the `replicas` arr
 
 The client can retrieve all `datanodes` configured in SSHDFS using the `datanodes` endpoint.
 
-For example, the `client` can retrieve all `datanodes` configured in the `namenode` with address `localhost:7000` as follows:
+For example, the `client` can retrieve all `datanodes` configured in the `namenode` with address `localhost:8000` as follows:
 
 ```
-GET http://localhost:7000/datanodes
+GET http://localhost:8000/datanodes
 ```
 
 Response:
@@ -684,10 +684,10 @@ Response:
 
 POSTing to `/files` creates a new file in the `namenode`. Use the `block_size_bytes` configured in `settings.json`.
 
-For example, the `client` can create a file called `myfile.jpg` in the `namenode` with address `localhost:7000`as follows:
+For example, the `client` can create a file called `myfile.jpg` in the `namenode` with address `localhost:8000`as follows:
 
 ```
-POST http://localhost:7000/files
+POST http://localhost:8000/files
 ```
 
 Body:
@@ -712,10 +712,10 @@ If the file already exists in the `namenode`, the response must be a 409.
 
 POSTing to `/files/{filename}/blocks` adds a block to an existing file.
 
-For example, the `client` can add a block to the file `myfile.jpg` in the `namenode` with address `localhost:7000` as follows:
+For example, the `client` can add a block to the file `myfile.jpg` in the `namenode` with address `localhost:8000` as follows:
 
 ```
-POST http://localhost:7000/files/myfile.jpg/blocks
+POST http://localhost:8000/files/myfile.jpg/blocks
 ```
 
 Body:
@@ -773,7 +773,7 @@ POSTing to `/block_report` is used by each `datanode` to send block reports to t
 For example:
 
 ```
-POST http://localhost:7000/block_report
+POST http://localhost:8000/block_report
 ```
 
 Body:
@@ -820,10 +820,10 @@ Response:
 
 GETting `/files/{filename}` retrieves the file metadata from the `namenode`. 
 
-For example, the `client` can retrieve all the information about a file called `myfile.jpg` from the `namenode` with address `localhost:7000` as follows:
+For example, the `client` can retrieve all the information about a file called `myfile.jpg` from the `namenode` with address `localhost:8000` as follows:
 
 ```
-GET http://localhost:7000/files/myfile.jpg
+GET http://localhost:8000/files/myfile.jpg
 ```
 
 Response:
@@ -854,10 +854,10 @@ If the file does not exist in the `namenode`, the response must be a 404.
 
 DELETEing `/files/{filename}` removes the file from the `namenode`. 
 
-For example, the `client` can delete a file called `myfile.jpg` from the `namenode` with address `localhost:7000` as follows:
+For example, the `client` can delete a file called `myfile.jpg` from the `namenode` with address `localhost:8000` as follows:
 
 ```
-DELETE http://localhost:7000/files/myfile.jpg
+DELETE http://localhost:8000/files/myfile.jpg
 ```
 
 Response: 204
