@@ -130,7 +130,7 @@ Test it with curl.
 
 ### [2.2.2] Getting jobs (^)
 
-Implement the [GET /jobs/{job_id](#get-jobs-job-id) endpoint. This endpoint will be called by the client to get the status of jobs.
+Implement the [GET /jobs/{job_id}](#get-jobs-job-id) endpoint. This endpoint will be called by the client to get the status of jobs.
 
 Test it with curl.
 
