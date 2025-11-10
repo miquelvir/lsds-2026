@@ -162,7 +162,7 @@ curl "http://localhost:8000/healthcheck" -s | jq
 
 Implement the first endpoint of the `namenode` API: [GET /datanodes](#get-datanodes).
 - You must create a [settings.json](#namenode-filesystem) file with the namenode configuration.
-- Your code must [read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the configured `datanodes` from the [settings.json](#namenode-filesystem) file file and return them for each request.
+- Your code must [read](https://python.land/data-processing/working-with-json#How_to_read_a_JSON_file_in_python) the configured `datanodes` from the [settings.json](#namenode-filesystem) file and return them for each request.
 
 
 <details>
