@@ -330,35 +330,6 @@ This is an example of a checkpoint, the journal and the image you can build afte
 }
 ```
 
-### [1.2.8] Backupnode (^^^^)
-
-Right now, if the `namenode` fails, our SSHDFS system is down. In Docker Compose, create a new replica of the `namenode` that acts as a Backup Node in port 7002.
-
-Implement the necessary API so the `namenode` can stream the journal changes to the `backupnode`, and the `backupnode` can mantain an up-to-date image.
-
-Test that if you create a file and some blocks in the main `namenode`, if you use the `backupnode` API you can still GET the new file.
-
-### [1.2.9] Backupnode periodic checkpoints (^^^^)
-
-Every 120 seconds, the `backupnode` should store his image as a new checkpoint and send it to the `namenode`. The namenode should then store the new checkpoint and truncate the journal.
-
-Implement the necessary API so the `namenode` can receive the new checkpoint and truncate the journal.
-
-To run code periodically, you may use code like this:
-
-```python
-async def background_loop():
-    while True:
-        logging.info("Here!")
-        await asyncio.sleep(1)
-
-@app.on_event("startup")
-async def schedule_periodic():
-    loop = asyncio.get_event_loop()
-    loop.create_task(background_loop())
-```
-
-
 ## [1.3] Datanode
 
 > [!IMPORTANT]
