@@ -132,16 +132,16 @@ We recommend that you implement a separate class to handle the metadata log:
 ```python
 class KRaft:
     def _load_metadata_log(self):
-        # TODO, implement in 3.1.2
+        # TODO, implement in 4.1.2
         
     def __init__(self):
         # TODO
     
     def append_to_metadata_log(self, action):
-        # TODO, implement in 3.1.2
+        # TODO, implement in 4.1.2
 
     def read_metadata_log(self, from_offset, max_batch_size):
-        # TODO, implement in 3.1.3
+        # TODO, implement in 4.1.3
 ```
 
 <details>
