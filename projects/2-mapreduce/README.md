@@ -10,10 +10,9 @@ Requirements are divided into categories to help you prioritize.
 
 | Weight               | Description                              | Symbol   |
 |----------------------|------------------------------------------|----------|
-| 40% | Essential, needed to get something working       | (^)      |
-| 30% | Nice-to-haves, not required to get something working | (^^)     |
-| 30% | Difficult, complex exercises             | (^^^)    |
-| +3/10 (extra) | Advanced, challenges for diving deep       | (^^^^)   |
+| 60% | Essential, needed to get something working       | (^)      |
+| 20% | Nice-to-haves, not required to get something working | (^^)     |
+| 20% | Difficult, complex exercises             | (^^^)    |
 
 # Submit for grading
 
@@ -186,7 +185,6 @@ Test it works with curl.
 ### [2.2.7] Balancing work (^^^)
 
 Right now, we send tasks to workers immediately. If there are many tasks, the workers could be overwhelmed. Instead, have each worker work on at most 1 task at the same time. If all workers are full, wait until they become available to send more tasks to them.
-
 
 ## [2.3] Using MapReduce
 
