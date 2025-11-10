@@ -764,19 +764,19 @@ We recommend that you extend the class you already implemented for handling meta
 
 class KRaft:
     def _persist_quorum_state(self, quorum_state):
-        # TODO, implement in 3.3.1
+        # TODO, implement in 4.3.1
 
     def _load_quorum_state(self):
-        # TODO, implement in 3.3.1
+        # TODO, implement in 4.3.1
 
     def _load_metadata_log(self):
-        # TODO, implement in 3.1.2
+        # TODO, implement in 4.1.2
         
     def __init__(self, my_voter_id, voter_count):
         # TODO
     
     def become_candidate(self):
-        # TODO, implement in 3.3.3
+        # TODO, implement in 4.3.3
 
     def vote_for_candidate(
         self, 
@@ -785,38 +785,38 @@ class KRaft:
         candidate_last_offset_epoch: int, 
         candidate_id: str
     ) -> bool:
-        # TODO, implement in 3.3.3
+        # TODO, implement in 4.3.3
 
     def new_leader(
         self,
         leader_id: str,
         leader_epoch: int
     ) -> bool:
-        # TODO, implement in 3.3.1
+        # TODO, implement in 4.3.1
     
     def get_voted(self):
         """ 
         return the voted broker id if there is a vote in the quorum state for the current epoch,
         otherwise returns -1
         """
-        # TODO, implement in 3.3.1
+        # TODO, implement in 4.3.1
 
     def get_leader(self):
         """ 
         return the leader id if there is one in the quorum state for the current epoch,
         otherwise returns -1
         """
-        # TODO, implement in 3.3.1
+        # TODO, implement in 4.3.1
 
     def append_to_metadata_log(self, action, body, offset = None, epoch = None):
         # TODO, extend with offset and epoch in 3.3.5
 
     async def wait_for_commit(self, offset):
-        # TODO, implement in 3.3.7
+        # TODO, implement in 4.3.7
 
 
     def read_metadata_log(self, from_offset, from_offset_epoch, max_batch_size, follower_id):
-        # TODO, extend in 3.3.7
+        # TODO, extend in 4.3.7
 ```
 
 
