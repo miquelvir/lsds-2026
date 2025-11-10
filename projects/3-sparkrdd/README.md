@@ -9,9 +9,8 @@ Requirements are divided into categories to help you prioritize.
 | Weight               | Description                              | Symbol   |
 |----------------------|------------------------------------------|----------|
 | 40% | Essential, needed to get something working       | (^)      |
-| 30% | Nice-to-haves, not required to get something working | (^^)     |
-| 30% | Difficult, complex exercises             | (^^^)    |
-| +3/10 (extra) | Advanced, challenges for diving deep       | (^^^^)   |
+| 40% | Nice-to-haves, not required to get something working | (^^)     |
+| 20% | Difficult, complex exercises             | (^^^)    |
 
 # Submit for grading
 
