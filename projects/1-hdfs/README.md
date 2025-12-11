@@ -263,7 +263,7 @@ Make sure you test it works with `curl`.
 
 ### [1.2.7] The journal (^^^)
 
-The goal of this exercise is to avoid writing and reading the full `checkpoint.json` file for every change (e.g. new file or block). Instead, implement a write-ahead-log (the journal) for every change.
+The goal of this exercise is to avoid writing and reading the full `checkpoint.json` file for every change (e.g. new file, block or deletion). Instead, implement a write-ahead-log (the journal) for every change.
 
 - When the `namenode` starts:
     - Create an empty `journal.log` file if it not exists.
@@ -286,15 +286,26 @@ This is an example of a checkpoint, the journal and the image you can build afte
                 "replicas": [ "1", "2" ]
             }
         ]
+    },
+    "test.txt": {
+        "file_name": "test.txt",
+        "block_size_bytes": 1000000,
+        "blocks": [
+            {
+                "number": 0,
+                "replicas": [ "1" ]
+            }
+        ]
     }
 }
 ```
 
 ```
-2 create-block { "file_name": "myfile.jpg", "number": 1, "replicas": [ "2", "3" ] }
-3 create-file {"file_name": "somefile.txt","block_size_bytes": 1000000}
-4 create-block { "file_name": "myfile.jpg", "number": 2, "replicas": [ "3", "1" ] }
-5 create-block { "file_name": "somefile.txt", "number": 0, "replicas": [ "1", "2" ] }
+2 create-block {"file_name":"myfile.jpg","number":1,"replicas":["2","3"]}
+3 create-file {"file_name":"somefile.txt","block_size_bytes":1000000}
+4 create-block {"file_name":"myfile.jpg","number":2,"replicas":["3","1"]}
+5 create-block {"file_name":"somefile.txt","number":0,"replicas":["1","2"]}
+6 delete-file {"file_name":"test.txt"}
 ```
 
 ```json
