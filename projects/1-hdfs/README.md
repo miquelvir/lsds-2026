@@ -433,6 +433,9 @@ For example:
 > [!TIP]
 > You can use [httpx](https://www.python-httpx.org/quickstart/) to make HTTP requests with Python.
 
+> [!TIP]
+> Read more about [Networking in Compose](https://docs.docker.com/compose/how-tos/networking/) to understand how your different services can communicate.
+
 ### [1.3.5] Handling deleted files (^^^^)
 
 Send a block report from each `datanode` to the `namenode` every 30 seconds:
