@@ -3,7 +3,7 @@
 Follow this guide to set up your laptop with all the tools you need for the LSDS course.
 
 > [!NOTE]
-> If you get stuck and need help, come to the office hours on the 7th of January (links in Aula Global).
+> If you get stuck and need help, ask for help in the Discord channel (link in Aula Global!).
 
 ## Installation
 
