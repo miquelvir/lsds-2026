@@ -2,3 +2,5 @@ projects/2-sparkrdd/data/*.json
 projects/2-sparkrdd/wikipedia500k.json
 projects/2-sparkrdd/wikipedia10k.json
 projects/2-sparkrdd/wikipedia100k.json
+*.pyc
+__pycache__/

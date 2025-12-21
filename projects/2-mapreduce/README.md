@@ -104,7 +104,7 @@ Test it with curl.
 
 ### [2.1.3] Reading map outputs (^)
 
-Implement the [POST /map-output](#post-output) endpoint. This endpoint can be called by a worker doing a reduce to get the map results this worker computed.
+Implement the [GET /map-output](#get-map-output) endpoint. This endpoint can be called by a worker doing a reduce to get the map results this worker computed.
 
 Test it with curl.
 
@@ -119,7 +119,7 @@ Test it with curl.
 
 During this lab, you will implement the `master` service.
 
-Create a FastAPI service with a Dockerfile in [the master folder](./master/).
+Create a FastAPI service with a Dockerfile in [the master folder](./master/). Add it to the compose file at port 8000 and implement a healthcheck endpoint.
 
 ### [2.2.1] Posting jobs (^)
 
@@ -159,11 +159,12 @@ Create a folder `client` with a Python script: `run.py` and a `requirements.txt`
 
 `run.py` must receive as parameters:
 - name of the input data folder, 
+- number of (input) map partitions, 
 - number of (output) reduce partitions, 
 - and name of the MapReduce app
 
 The command should use the master API to:
-- create a job
+- create a job and print `job_id: <id>`
 - refresh the job status every 500ms until the job completes
 - if the job status changes, print it to stdout using this format: `in-progress - mapping (7/10 partitions done)`, `in-progress - reducing (9/12 partitions done)` or `completed`.
 
@@ -404,11 +405,11 @@ graphite 1
 global 1
 ```
 
-#### POST /map-output
+#### GET /map-output
 
 The `map-output` endpoint allows other workers that need this worker's map output as input for their reduce to read it.
 
-It receives as body parameters:
+It receives as query parameters:
 - `job_id`: the id of the job
 - `map_partition`: the number of the map partition to read
 - `reduce_partition`: inside that mapped partition, which of the output's reduce partition to read
@@ -418,15 +419,7 @@ The response consists of a dictionary of each key, and a list of the values prod
 For example:
 
 ```
-POST /map-output
-```
-
-```json
-{
-    "job_id": "617d9970-9b4c-4025-beb8-16ff03afc8d2",
-    "map_partition": 2,
-    "reduce_partition": 3
-}
+GET /map-output?job_id=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=2&reduce_partition=1"
 ```
 
 Response:
@@ -462,7 +455,7 @@ Body:
     "job_id": "617d9970-9b4c-4025-beb8-16ff03afc8d2",
     "app_name": "word_count",
     "reduce_partition": 1,
-    "intermediate_partitions": ["http://worker1:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output?mapPartition=0&reducePartition=1", "http://worker2:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output?mapPartition=1&reducePartition=1", "http://worker2:80/jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map-output?mapPartition=2&reducePartition=1"]
+    "intermediate_partitions": ["http://worker1:80/map-output?job_id=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=0&reducePartition=1", "http://worker2:80/map-output?jobId=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=1&reducePartition=1", "http://worker2:80/map-output?jobId=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=2&reducePartition=1"]
 }
 ```
 
@@ -474,7 +467,7 @@ Response:
 ```
 
 To run the reduce, you must:
-- For every `map_worker` of this job (the ones in the body), fetch their outputs using the [GET /jobs/{job_id}/map-output/{reduce_partition}](#get-jobsjob_idmap-outputreduce_partition) endpoint.
+- For every `map_worker` of this job (the ones in the body), fetch their outputs using the [GET /map-output](#get-map-output) endpoint.
 - Aggregate all values for each key across all the map outputs'.
 - Dynamically import the `reduce` function from the client Python app [similar to the map](#dynamically-importing-the-map-reduce-and-partitioner-functions)
 - Call the `reduce` function from the client with: key (produced by the previous maps) and values list (list of all string values for that key)
