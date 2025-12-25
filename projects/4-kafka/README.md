@@ -1411,7 +1411,7 @@ The `create_topic.py` client script should use the [POST /admin/v1/topics](#post
 For example:
 
 ```zsh
-python3 client/create_topic.py mynewtopic -p 4 -r 3
+python3 client/create_topic.py mynewtopic -p 4
 ```
 
 ```json
@@ -1444,7 +1444,6 @@ python3 client/create_topic.py mynewtopic -p 4 -r 3
 
 **optional arguments**
 - **-p**, the number of partitions (`3` by default)
-- **-r**, the number of replicas per topic (`3` by default)
 - **-b**, the list of brokers (`1@localhost:8001,2@localhost:8002,3@localhost:8003,4@localhost:8004,5@localhost:8005` by default)
 
 > If the first broker on the broker list (`-b`) is not the leader (i.e. it returns a 421), the client should send the request to the leader.
