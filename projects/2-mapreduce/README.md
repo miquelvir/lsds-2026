@@ -305,7 +305,7 @@ GET /healthcheck
 Response:
 ```json
 {
-    "healthy": true
+    "status": "up"
 }
 ```
 
