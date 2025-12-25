@@ -633,7 +633,7 @@ The `namenode` writes to the `checkpoint.json` file every file that is created i
 }
 ```
 
-If the `replication_factor` of the system is higher than one, the `replicas` array stores the host and port of each `datanode` that has a replica of the block. Otherwise, the `replicas` array contains a single `datanode` object (with its host and port).
+If the `replication_factor` of the system is higher than one, the `replicas` array stores the id of each `datanode` that has a replica of the block. Otherwise, the `replicas` array contains a single `datanode` id.
 
 #### GET /datanodes
 
