@@ -46,27 +46,11 @@ This section presents a step by step work breakdown to help you implement SSKafk
 
 Bootstrap a FastAPI service for the broker with a single [GET /healthcheck](#get-healthcheck) endpoint.
 
-```
-/kafka
-    /broker
-        Dockerfile
-        /app
-            main.py
-            requirements.txt
-    /client
-        consume.py
-        produce.py
-        create_topic.py
-        delete_topic.py
-        list_topics.py
-    docker-compose.yaml
-```
-
-Then, create a `docker-compose.yaml` file with 5 brokers in ports 8001 (leader), 8002 (follower), 8003 (follower), 8004 (follower) and 8005 (follower).
+Then, create a `docker-compose.yaml` file with 5 brokers in ports 8001 (leader), 8002 (follower), 8003 (follower), 8004 (follower) and 8005 (follower). For now, 8001 will always be the lesder of the cluster.
 
 
 > [!TIP]
-> You can configure the broker_id an the leader_broker_id by passing environment variables from [Docker Compose](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/) to [Python](https://stackoverflow.com/a/4907053).
+> You can configure the broker_id and the leader_broker_id by passing environment variables from [Docker Compose](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/) to [Python](https://stackoverflow.com/a/4907053).
 
 
 <details>
