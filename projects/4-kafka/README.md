@@ -1411,7 +1411,7 @@ The `create_topic.py` client script should use the [POST /admin/v1/topics](#post
 For example:
 
 ```zsh
-python3 client/create_topic.py mynewtopic -p 4
+python3 client/create_topic.py testtopic -p 4
 ```
 
 ```json
