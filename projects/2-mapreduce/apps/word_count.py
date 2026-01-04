@@ -1,3 +1,5 @@
+from typing import Optional
+
 def map(key: str, value: str):
     words = value.replace(",", " ").replace(".", "").replace(":", "").split()
     result = []
@@ -5,7 +7,7 @@ def map(key: str, value: str):
         yield word.lower(), 1
 
 
-def reduce(key: str, values: list) -> str:
+def reduce(key: str, values: list) -> Optional[int]:
     return len(values)
 
 
