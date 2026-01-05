@@ -7,7 +7,7 @@ def map(key: str, value: str):
         yield word.lower(), 1
 
 
-def reduce(key: str, values: list) -> Optional[int]:
+def reduce(key: str, values: list) -> str:
     return str(len(values))
 
 
