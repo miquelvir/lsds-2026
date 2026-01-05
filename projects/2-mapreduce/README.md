@@ -228,7 +228,7 @@ Write a MapReduce program `modified_word_count.py` that counts how many words th
 Test it works with the `client/run.py`, the `medium-text` dataset and your MapReduce system.
 
 ```
-python3 client/run.py ./data/medium-text 4 1 modified_word_count
+python3 client/run.py medium-text 4 1 modified_word_count
 ```
 
 ### [2.3.2] Links (^^)
