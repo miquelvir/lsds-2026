@@ -536,7 +536,7 @@ The result of the map is stored in many files, one per reduce task:
 
 Each of these files has the reduce partition number as its name. Each reduce worker writes a single reduce output file for any given reduce task.
 
-The content of this file is one key and one value per line, separated with a space. The value (if not None) is the one returned by the user's reduce function. For example:
+The content of this file is one key and one value per line, separated with a space. The value (if not empty) is the one returned by the user's reduce function. For example:
 
 ```
 developers 1
