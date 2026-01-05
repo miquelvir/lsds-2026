@@ -238,7 +238,7 @@ Write a MapReduce program `links.py` that counts how many requests there are per
 Test it works with the `client/run.py`, the `small-logs` dataset and your MapReduce system.
 
 ```
-python3 client/run.py ./data/small-logs 1 1 links
+python3 client/run.py small-logs 1 1 links
 ```
 
 ### [2.3.3] Bigrams (^^)
