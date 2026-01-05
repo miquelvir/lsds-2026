@@ -253,7 +253,7 @@ is a 2
 Test it works with the `client/run.py`, the `medium-text` dataset and your MapReduce system.
 
 ```
-python3 client/run.py ./data/medium-text 4 1 bigrams
+python3 client/run.py medium-text 4 1 bigrams
 ```
 
 # Design
