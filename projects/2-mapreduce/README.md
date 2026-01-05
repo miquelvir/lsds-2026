@@ -119,21 +119,53 @@ Test it with curl.
 
 During this lab, you will implement the `master` service.
 
-Create a FastAPI service with a Dockerfile in [the master folder](./master/). Add it to the compose file at port 8000 and implement a healthcheck endpoint.
+### [2.2.1] Healtcheck (^)
+Create a folder `master` with a FastAPI service and its Dockerfile. Add it to the Docker Compose file at port 8000.
 
-### [2.2.1] Posting jobs (^)
+Add volumes for the [data](./data/), [apps](./apps/) and [results](./results/) folders.
+
+Implement a basic `/healthcheck` endpoint that always returns this:
+
+```json
+{
+    "status": "up"
+}
+```
+
+<details>
+<summary>Sanity check</summary>
+
+**test**
+
+```zsh
+docker compose up --build
+```
+
+```zsh
+curl "http://localhost:8000/healthcheck" -s | jq
+```
+
+**expected**
+```json
+{
+    "status": "up"
+}
+```
+</details>
+
+### [2.2.2] Posting jobs (^)
 
 Implement the [POST /jobs](#post-jobs) endpoint. This endpoint will be called by the client to create new MapReduce jobs.
 
 Test it with curl.
 
-### [2.2.2] Getting jobs (^)
+### [2.2.3] Getting jobs (^)
 
-Implement the [GET /jobs/{job_id}](#get-jobs-job-id) endpoint. This endpoint will be called by the client to get the status of jobs.
+Implement the [GET /jobs/{job_id}](#get-jobsjob_id) endpoint. This endpoint will be called by the client to get the status of jobs.
 
 Test it with curl.
 
-### [2.2.3] Notifying finished map tasks (^)
+### [2.2.4] Notifying finished map tasks (^)
 
 Implement the [POST /jobs/{job_id}/map/{partition}/completed](#post-jobsjob_idmappartitioncompleted) endpoint to allow workers notifying the master when they have finished a Map task.
 
@@ -143,7 +175,7 @@ Finally, when the last map task of a job is completed, trigger the reduce tasks 
 
 Test it works with curl.
 
-### [2.2.4] Notifying finished reduce tasks (^)
+### [2.2.5] Notifying finished reduce tasks (^)
 
 Implement the [POST /jobs/{job_id}/reduce/{partition}/completed](#post-jobsjob_idreducepartitioncompleted) endpoint to allow workers notifying the master when they have finished a Reduce task.
 
@@ -153,7 +185,7 @@ Finally, when the last reduce task of a job is completed, change the status of t
 
 Test you can create jobs, and the map and reduce phases work, ending with the results being stored in the [results folder](./results/) and paste screenshots of the relevant logs and results.
 
-### [2.2.5] Client (^^)
+### [2.2.6] Client (^^)
 
 Create a folder `client` with a Python script: `run.py` and a `requirements.txt` file with any libraries it needs to run. 
 
@@ -165,14 +197,14 @@ Create a folder `client` with a Python script: `run.py` and a `requirements.txt`
 
 The command should use the master API to:
 - create a job and print `job_id: <id>`
-- refresh the job status every 500ms until the job completes
+- refresh the job status every **250ms** until the job completes
 - if the job status changes, print it to stdout using this format: `in-progress - mapping (7/10 partitions done)`, `in-progress - reducing (9/12 partitions done)` or `completed`.
 
 
 > [!TIP]
 > You can use [httpx](https://www.python-httpx.org/quickstart/) to make HTTP requests with Python. See `JSON Response Content`.
 
-### [2.2.6] Handling failures (^^^)
+### [2.2.7] Handling failures (^^^)
 
 Call the `healtcheck` endpoint of `workers` every 30 seconds.
 
@@ -183,7 +215,7 @@ If a `worker` does not respond to the `healthcheck`:
 Test it works with curl.
 
 
-### [2.2.7] Balancing work (^^^)
+### [2.2.8] Balancing work (^^^)
 
 Right now, we send tasks to workers immediately. If there are many tasks, the workers could be overwhelmed. Instead, have each worker work on at most 1 task at the same time. If all workers are full, wait until they become available to send more tasks to them.
 
@@ -191,19 +223,27 @@ Right now, we send tasks to workers immediately. If there are many tasks, the wo
 
 ### [2.3.1] Modified word count (^^)
 
-Write a MapReduce program that counts how many words that start with the character `t` have a length greater than 3 characters.
+Write a MapReduce program `modified_word_count.py` that counts how many words that start with the character `t` have a length greater than 3 characters.
 
 Test it works with the `client/run.py`, the `medium-text` dataset and your MapReduce system.
 
+```
+python3 client/run.py medium-text 4 1 modified_word_count
+```
+
 ### [2.3.2] Links (^^)
 
-Write a MapReduce program that counts how many requests there are per user agent. E.g. 10 from Mozilla, 2 from Postman, 3 from curl, 100 from Chrome, etc.
+Write a MapReduce program `links.py` that counts how many requests there are per user agent. E.g. 10 from Mozilla, 2 from Postman, 3 from curl, 100 from Chrome, etc.
 
-Test it works with the `client/run.py`, the `medium-crawler` dataset and your MapReduce system.
+Test it works with the `client/run.py`, the `small-logs` dataset and your MapReduce system.
+
+```
+python3 client/run.py small-logs 1 1 links
+```
 
 ### [2.3.3] Bigrams (^^)
 
-Write a MapReduce program that counts how many times each bigram appears in the text, if they appear more than once. For example, in the text `a small cat is a cute animal even if is a small cat`, the bigrams are:
+Write a MapReduce program `bigrams.py` that counts how many times each bigram appears in the text, if they appear more than once. For example, in the text `a small cat is a cute animal even if is a small cat`, the bigrams are:
 
 ```
 small cat 2
@@ -211,6 +251,10 @@ is a 2
 ```
 
 Test it works with the `client/run.py`, the `medium-text` dataset and your MapReduce system.
+
+```
+python3 client/run.py medium-text 4 1 bigrams
+```
 
 # Design
 
@@ -243,11 +287,11 @@ In SSMapReduce, there's many workers (the worker is horizontally scaled).
 
 In order for the `master` to be able to assign tasks, the `worker` exposes three API endpoints:
 - [Healthcheck](#get-healthcheck)
-- [Run a map](#post-jobsjob_idmap)
-- [Run a reduce](#post-jobsjob_idreduce)
+- [Run a map](#post-map)
+- [Run a reduce](#post-reduce)
 
 In order for the other `workers` to be able to read the output of a map task this `worker` completed, the `worker` exposes one additional API endpoint:
-- [Get the map output](#get-jobsjob_idmap-outputpartition)
+- [Get the map output](#get-map-output)
 
 #### worker filesystem
 
@@ -455,7 +499,7 @@ Body:
     "job_id": "617d9970-9b4c-4025-beb8-16ff03afc8d2",
     "app_name": "word_count",
     "reduce_partition": 1,
-    "intermediate_partitions": ["http://worker1:80/map-output?job_id=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=0&reducePartition=1", "http://worker2:80/map-output?jobId=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=1&reducePartition=1", "http://worker2:80/map-output?jobId=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=2&reducePartition=1"]
+    "intermediate_partitions": ["http://worker1:80/map-output?job_id=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=0&reduce_partition=1", "http://worker2:80/map-output?jobId=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=1&reduce_partition=1", "http://worker2:80/map-output?jobId=617d9970-9b4c-4025-beb8-16ff03afc8d2&map_partition=2&reduce_partition=1"]
 }
 ```
 
@@ -492,7 +536,7 @@ The result of the map is stored in many files, one per reduce task:
 
 Each of these files has the reduce partition number as its name. Each reduce worker writes a single reduce output file for any given reduce task.
 
-The content of this file is one key and one value per line, separated with a space. The value is the one returned by the user's reduce function. For example:
+The content of this file is one key and one value per line, separated with a space. The value (if not empty) is the one returned by the user's reduce function. For example:
 
 ```
 developers 1
@@ -539,7 +583,7 @@ This endpoint allows the caller to trigger a new MapReduce job. It takes the fol
 
 When a new job is received:
 - The master generates a new id using [uuid4](https://www.uuidgenerator.net/dev-corner/python).
-- Selects a worker using modulo and [sends the worker a map task using the API](#post-jobsjob_idmap)
+- Selects a worker using modulo and [sends the worker a map task using the API](#post-map)
 - Stores the job, as well as all the workers that have been assigned to its in-memory dictionary
 
 For example:
@@ -638,12 +682,6 @@ For example:
 POST /jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/map/2/completed
 ```
 
-Body:
-```json
-{
-    "worker_id": "worker1"
-}
-```
 
 Response:
 ```json
@@ -666,13 +704,6 @@ For example:
 
 ```
 POST /jobs/617d9970-9b4c-4025-beb8-16ff03afc8d2/reduce/2/completed
-```
-
-Body:
-```json
-{
-    "worker_id": "worker1"
-}
 ```
 
 Response:

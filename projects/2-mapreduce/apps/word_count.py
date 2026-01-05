@@ -1,3 +1,5 @@
+from typing import Optional
+
 def map(key: str, value: str):
     words = value.replace(",", " ").replace(".", "").replace(":", "").split()
     result = []
@@ -6,7 +8,7 @@ def map(key: str, value: str):
 
 
 def reduce(key: str, values: list) -> str:
-    return len(values)
+    return str(len(values))
 
 
 def partitioner(key: str, partition_count: int) -> int:
