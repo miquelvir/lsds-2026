@@ -8,7 +8,7 @@ def map(key: str, value: str):
 
 
 def reduce(key: str, values: list) -> Optional[int]:
-    return len(values)
+    return str(len(values))
 
 
 def partitioner(key: str, partition_count: int) -> int:
