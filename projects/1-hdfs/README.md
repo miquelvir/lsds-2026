@@ -504,7 +504,7 @@ Create a new Python script `upload.py <source_path> <sshdfs_file_name>`. It crea
 - Read [the bytes of the file](https://stackoverflow.com/questions/1035340/reading-binary-file-and-looping-over-each-byte). For each block:
     - Read `block_size_bytes` from the file
     - Add a new block to the file using the [POST /files/{filename}/blocks](#post-filesfilenameblocks) endpoint in the `namenode` API. 
-    - Upload the block the the first `namenode` using the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_number). If you have implemented write pipelines, remember to send the proper `pipeline` query parameter for them to work.
+    - Upload the block the first `datanode` using the [PUT /files/{filename}/blocks/{block_number}](#put-filesfilenameblocksblock_number). If you have implemented write pipelines, remember to send the proper `pipeline` query parameter for them to work.
 
 > [!TIP]
 > You can use the [files parameter](https://www.slingacademy.com/article/python-how-to-upload-files-with-httpx-form-data/) to upload bytes with HTTPX.
