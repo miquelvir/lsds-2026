@@ -122,8 +122,6 @@ During this lab, you will implement the `master` service.
 ### [2.2.1] Healtcheck (^)
 Create a folder `master` with a FastAPI service and its Dockerfile. Add it to the Docker Compose file at port 8000.
 
-Add volumes for the [data](./data/), [apps](./apps/) and [results](./results/) folders.
-
 Implement a basic `/healthcheck` endpoint that always returns this:
 
 ```json
