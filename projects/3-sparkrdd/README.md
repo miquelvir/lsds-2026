@@ -77,6 +77,20 @@ curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-N
 curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 1000 > wikipedia1000.json
 ```
 
+On MacOS, you might need to use `gnu-tar` instead:
+
+```
+brew install gnu-tar
+
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz \
+| gtar xz --to-stdout \
+| head -n 10 > wikipedia10.json
+
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz \
+| gtar xz --to-stdout \
+| head -n 1000 > wikipedia1000.json
+```
+
 Write a Spark RDD job that creates a reverse index for all the crawled articles. he reverse index must map every word in the abstract of every article, to the list of article (ids) that contain it. Store this as a file. The format must be: `LINE CRLF LINE CRLF LINE CRLF ...`, where each LINE is `WORD SP DOCID SP DOCID SP DOCID SP ... DOCID`. For example:
 
 ```
