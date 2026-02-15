@@ -67,14 +67,14 @@ Create a file `spark_count_bigrams.py` that counts how many times each bigram ap
 
 ### [2.1.5] Reverse index (^^^)
 
-Find the latest available Wikipedia datasets from [dumps.wikimedia](https://dumps.wikimedia.org/other/enterprise_html/runs/). For example, https://dumps.wikimedia.org/other/enterprise_html/runs/20240901/enwiki-NS0-20240901-ENTERPRISE-HTML.json.tar.gz.
+Find the latest available Wikipedia datasets from [dumps.wikimedia](https://dumps.wikimedia.org/other/enterprise_html/runs/). For example, `https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz` is the latest `enwiki-NS10` dataset at the time of writing.
 
 Then, download the first 10 and 1k articles in different files. The smaller datasets will be useful for testing.
 
 ```
-curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20240901/enwiki-NS0-20240901-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 10 > wikipedia10.json
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 10 > wikipedia10.json
 
-curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20240901/enwiki-NS0-20240901-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 1000 > wikipedia1000.json
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 1000 > wikipedia1000.json
 ```
 
 Write a Spark RDD job that creates a reverse index for all the crawled articles. he reverse index must map every word in the abstract of every article, to the list of article (ids) that contain it. Store this as a file. The format must be: `LINE CRLF LINE CRLF LINE CRLF ...`, where each LINE is `WORD SP DOCID SP DOCID SP DOCID SP ... DOCID`. For example:
