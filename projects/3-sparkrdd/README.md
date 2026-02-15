@@ -40,11 +40,11 @@ When you have finished the project, follow these steps to submit it for grading:
 
 Start up a Spark cluster locally using Docker compose: `docker-compose up`.
 
-Check the local IP for the Spark Master service in the spark-master-1 container logs. You should see a log similar to `Starting Spark master at spark://172.20.0.2:7077`.
-
-Run the job with Spark: `docker-compose exec spark-master spark-submit --master spark://{IP_FROM_PREVIOUS_STEP}:7077 /opt/bitnami/spark/app/spark_sum.py /opt/bitnami/spark/app/data/numbers1.txt`
+Run the job with Spark: `docker-compose exec spark-master spark-submit --master spark://spark-master:7077 /opt/bitnami/spark/app/spark_sum.py /opt/bitnami/spark/app/data/numbers1.txt`
 
 Take a close look at the logs. What was the result of your job?
+
+Now take a look at the Spark History Server (http://localhost:18080/), how many tasks did `spark-sum` app perform?
 
 ### [2.1.2] Summing even numbers (^)
 
