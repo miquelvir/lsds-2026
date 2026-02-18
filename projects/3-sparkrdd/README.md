@@ -67,14 +67,14 @@ Create a file `spark_count_bigrams.py` that counts how many times each bigram ap
 
 ### [2.1.5] Reverse index (^^^)
 
-Find the latest available Wikipedia datasets from [dumps.wikimedia](https://dumps.wikimedia.org/other/enterprise_html/runs/). For example, `https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz` is the latest `enwiki-NS10` dataset at the time of writing.
+Find the latest available Wikipedia datasets from [dumps.wikimedia](https://dumps.wikimedia.org/other/enterprise_html/runs/). For example, `https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS0-20250320-ENTERPRISE-HTML.json.tar.gz` is the latest `enwiki-NS0` dataset at the time of writing.
 
 Then, download the first 10 and 1k articles in different files. The smaller datasets will be useful for testing.
 
 ```
-curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 10 > wikipedia10.json
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS0-20250320-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 10 > wikipedia10.json
 
-curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 1000 > wikipedia1000.json
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS0-20250320-ENTERPRISE-HTML.json.tar.gz | tar xz --to-stdout | head -n 1000 > wikipedia1000.json
 ```
 
 On MacOS, you might need to use `gnu-tar` instead:
@@ -82,11 +82,11 @@ On MacOS, you might need to use `gnu-tar` instead:
 ```
 brew install gnu-tar
 
-curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz \
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS0-20250320-ENTERPRISE-HTML.json.tar.gz \
 | gtar xz --to-stdout \
 | head -n 10 > wikipedia10.json
 
-curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS10-20250320-ENTERPRISE-HTML.json.tar.gz \
+curl -L https://dumps.wikimedia.org/other/enterprise_html/runs/20250320/enwiki-NS0-20250320-ENTERPRISE-HTML.json.tar.gz \
 | gtar xz --to-stdout \
 | head -n 1000 > wikipedia1000.json
 ```
