@@ -1312,8 +1312,8 @@ Ask the broker for a vote to become the leader. Returns `true` only IIF:
 
 ```json
 {
-    "leader_id": str,
-    "leader_epoch": int
+    "leader_id": "1",
+    "leader_epoch": 11
 }
 ```
 
@@ -1325,7 +1325,7 @@ Ask the broker for a vote to become the leader. Returns `true` only IIF:
 
 ```json
 {
-    "accepted": True
+    "accepted": true
 }
 ```
 
@@ -1333,7 +1333,7 @@ or
 
 ```
 {
-    "accepted": False,
+    "accepted": false,
     "leader_epoch": 13,
     "leader_id": "2"
 }
