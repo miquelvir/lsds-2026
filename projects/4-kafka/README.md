@@ -11,7 +11,7 @@ Requirements are divided into categories to help you prioritize.
 | 40% | Essential, needed to get something working       | (^)      |
 | 30% | Nice-to-haves, not required to get something working | (^^)     |
 | 30% | Difficult, complex exercises             | (^^^)    |
-| +3/10 (extra) | Advanced, challenges for diving deep       | (^^^^)   |
+| +1.5/10 (extra) | Advanced, challenges for diving deep       | (^^^^)   |
 
 # Submit for grading
 
