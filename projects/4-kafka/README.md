@@ -1307,8 +1307,8 @@ Ask the broker for a vote to become the leader. Returns `true` only IIF:
 
 **request body**
 
-- **leader_id**, XXXXX
-- **leader_epoch**, XXXXX
+- **leader_id**, the id of the leader broker in the new epoch
+- **leader_epoch**, the epoch
 
 ```json
 {
@@ -1319,13 +1319,23 @@ Ask the broker for a vote to become the leader. Returns `true` only IIF:
 
 **response status**
 
-- **200**, XXXX
+- **200**, the epoch has been accepted or rejected 
 
 **response body**
 
 ```json
 {
     "accepted": True
+}
+```
+
+or
+
+```
+{
+    "accepted": False,
+    "leader_epoch": 13,
+    "leader_id": "2"
 }
 ```
 
