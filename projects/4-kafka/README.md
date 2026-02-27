@@ -121,11 +121,8 @@ class KRaft:
     def __init__(self):
         # TODO
     
-    def append_to_metadata_log(self, action):
+    def append_to_metadata_log(self, action, body):
         # TODO, implement in 4.1.2
-
-    def read_metadata_log(self, from_offset, max_batch_size):
-        # TODO, implement in 4.1.3
 ```
 
 <details>
@@ -800,7 +797,7 @@ class KRaft:
 
 
     def read_metadata_log(self, from_offset, from_offset_epoch, max_batch_size, follower_id):
-        # TODO, extend in 4.3.7
+        # TODO, implement in 4.3.7
 ```
 
 
